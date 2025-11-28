@@ -1,0 +1,3 @@
+# Tests directory
+# Property-based tests and unit tests
+# creditCalculator.test.js, timerLogic.test.js, shopLogic.test.js, etc.
