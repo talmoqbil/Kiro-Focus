@@ -58,7 +58,8 @@
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 12.4_
 
 - [ ] 4. Implement Kiro mascot component
-  - [ ] 4.1 Create kiroLogic.js for emotion state management
+  - [ ] 4.1 Create kiroLogic.js for emotion state management 
+    - Get the Kiro mascot image from online or ask the user to do this manual)
     - Implement getEmotionForEvent(event) mapping events to emotions
     - Implement message queue management (enqueue, dequeue, peek)
     - _Requirements: 3.2, 3.3, 3.4, 3.5, 3.7_
