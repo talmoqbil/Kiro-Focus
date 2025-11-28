@@ -12,8 +12,8 @@
     - Create App.jsx with basic layout structure
     - _Requirements: All_
 
-- [ ] 2. Implement credit calculation utilities
-  - [ ] 2.1 Create creditCalculator.js with all credit formulas
+- [x] 2. Implement credit calculation utilities
+  - [x] 2.1 Create creditCalculator.js with all credit formulas
     - Implement calculateBaseCredits(duration)
     - Implement calculateCompletionBonus(baseCredits, pauseCount)
     - Implement calculateStreakBonus(baseCredits, streak)
