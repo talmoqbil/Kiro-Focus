@@ -9,6 +9,7 @@ export default {
       colors: {
         // Dark theme color palette (Requirements 9.1-9.4)
         'kiro-bg': '#0a0e27',           // Dark background (9.1)
+        'kiro-bg-light': '#1a1f3d',     // Lighter background for cards/bubbles
         'kiro-purple': '#b794f6',        // Primary accent (9.2)
         'kiro-success': '#48bb78',       // Success green (9.3)
         'kiro-warning': '#ed8936',       // Warning orange (9.4)
@@ -22,6 +23,7 @@ export default {
         'kiro-spin': 'kiro-spin 1s ease-out',
         'kiro-nod': 'kiro-nod 3s ease-in-out infinite',
         'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'modal-enter': 'modal-enter 0.2s ease-out',
       },
       keyframes: {
         'kiro-float': {
@@ -39,6 +41,10 @@ export default {
         'kiro-nod': {
           '0%, 100%': { transform: 'translateY(0) rotate(0)' },
           '50%': { transform: 'translateY(-3px) rotate(5deg)' },
+        },
+        'modal-enter': {
+          'from': { opacity: '0', transform: 'scale(0.95)' },
+          'to': { opacity: '1', transform: 'scale(1)' },
         },
       },
     },

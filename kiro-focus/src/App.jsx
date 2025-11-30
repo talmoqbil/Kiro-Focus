@@ -1,5 +1,13 @@
+import { useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
-import { Zap, Clock, ShoppingBag, Layout, History } from 'lucide-react';
+import { Clock, ShoppingBag, Layout, History } from 'lucide-react';
+import Timer from './components/Timer';
+import ComponentShop from './components/ComponentShop';
+import InfrastructureCanvas from './components/InfrastructureCanvas';
+import SessionHistory from './components/SessionHistory';
+import KiroMascot from './components/KiroMascot';
+import CreditDisplay from './components/CreditDisplay';
+import { useFocusCoach } from './hooks/useAgents';
 
 // Navigation component
 function Navigation() {
@@ -33,65 +41,49 @@ function Navigation() {
   );
 }
 
-// Credit display in header
+// Credit display in header with animated counter
 function CreditHeader() {
   const { state } = useApp();
   const { credits } = state.userProgress;
   
   return (
     <div className="flex items-center justify-end p-4">
-      <div className="flex items-center gap-2 bg-kiro-bg border border-kiro-purple/30 rounded-lg px-4 py-2">
-        <Zap className="text-kiro-warning" size={20} />
-        <span className="text-xl font-bold text-white">{credits}</span>
-        <span className="text-kiro-purple/70 text-sm">credits</span>
-      </div>
+      <CreditDisplay credits={credits} />
     </div>
   );
 }
 
-// Placeholder components for each view
+// Re-engagement check on app load
+function ReEngagementChecker() {
+  const { checkReEngagement } = useFocusCoach();
+  
+  useEffect(() => {
+    // Check for re-engagement on mount (after a short delay)
+    const timer = setTimeout(() => {
+      checkReEngagement();
+    }, 1500);
+    
+    return () => clearTimeout(timer);
+  }, [checkReEngagement]);
+  
+  return null;
+}
+
+// View components
 function TimerView() {
-  return (
-    <div className="flex flex-col items-center justify-center flex-1 p-8">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-kiro-purple mb-4">Focus Timer</h2>
-        <p className="text-white/70">Timer component will be implemented in Task 3</p>
-      </div>
-    </div>
-  );
+  return <Timer />;
 }
 
 function ShopView() {
-  return (
-    <div className="flex flex-col items-center justify-center flex-1 p-8">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-kiro-purple mb-4">Component Shop</h2>
-        <p className="text-white/70">Shop component will be implemented in Task 6</p>
-      </div>
-    </div>
-  );
+  return <ComponentShop />;
 }
 
 function CanvasView() {
-  return (
-    <div className="flex flex-col items-center justify-center flex-1 p-8">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-kiro-purple mb-4">Infrastructure Canvas</h2>
-        <p className="text-white/70">Canvas component will be implemented in Task 7</p>
-      </div>
-    </div>
-  );
+  return <InfrastructureCanvas />;
 }
 
 function HistoryView() {
-  return (
-    <div className="flex flex-col items-center justify-center flex-1 p-8">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-kiro-purple mb-4">Session History</h2>
-        <p className="text-white/70">History component will be implemented in Task 8</p>
-      </div>
-    </div>
-  );
+  return <SessionHistory />;
 }
 
 // Main content area that switches between views
@@ -111,44 +103,48 @@ function MainContent() {
   return <ViewComponent />;
 }
 
-// Kiro mascot placeholder (fixed position)
-function KiroMascotPlaceholder() {
+// Kiro mascot wrapper
+function KiroMascotWrapper() {
+  const { state } = useApp();
+  const { kiroEmotion, kiroMessage } = state.uiState;
+  
   return (
-    <div className="fixed bottom-8 right-8 z-50">
-      <div className="w-24 h-28 bg-white/85 rounded-[50%_50%_45%_45%] shadow-kiro-glow animate-kiro-float relative">
-        {/* Eyes */}
-        <div className="absolute top-10 left-7 w-3 h-3 bg-black rounded-full" />
-        <div className="absolute top-10 right-7 w-3 h-3 bg-black rounded-full" />
-      </div>
-      <p className="text-center text-xs text-kiro-purple/70 mt-2">Kiro</p>
-    </div>
+    <KiroMascot 
+      emotion={kiroEmotion} 
+      message={kiroMessage}
+    />
   );
 }
 
 // App layout component
 function AppLayout() {
   return (
-    <div className="min-h-screen bg-kiro-bg flex flex-col">
+    <div className="h-screen bg-kiro-bg flex flex-col overflow-hidden">
+      {/* Re-engagement checker (invisible) */}
+      <ReEngagementChecker />
+      
       {/* Header with credits */}
-      <header className="border-b border-kiro-purple/20">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div className="p-4">
-            <h1 className="text-2xl font-bold text-kiro-purple">Kiro Focus</h1>
+      <header className="border-b border-kiro-purple/20 flex-shrink-0">
+        <div className="max-w-6xl mx-auto flex justify-between items-center px-4">
+          <div className="py-3">
+            <h1 className="text-xl font-bold text-kiro-purple">Kiro Focus</h1>
           </div>
           <CreditHeader />
         </div>
       </header>
       
       {/* Navigation */}
-      <Navigation />
+      <div className="flex-shrink-0">
+        <Navigation />
+      </div>
       
-      {/* Main content area */}
-      <main className="flex-1 max-w-6xl mx-auto w-full">
+      {/* Main content area - fills remaining space */}
+      <main className="flex-1 max-w-6xl mx-auto w-full overflow-auto">
         <MainContent />
       </main>
       
       {/* Kiro mascot (fixed position) */}
-      <KiroMascotPlaceholder />
+      <KiroMascotWrapper />
     </div>
   );
 }

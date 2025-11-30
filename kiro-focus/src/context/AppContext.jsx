@@ -4,7 +4,7 @@ import { createContext, useContext, useReducer, useCallback } from 'react';
 const initialState = {
   // User Progress State
   userProgress: {
-    credits: 0,
+    credits: 1000, // Starting credits for testing
     totalSessionTime: 0, // seconds
     sessionsCompleted: 0,
     currentStreak: 0,
@@ -21,6 +21,8 @@ const initialState = {
     totalDuration: 0, // seconds
     startTime: null, // timestamp
     pauseCount: 0,
+    pausedAt: null, // timestamp when paused
+    totalPausedTime: 0, // total ms spent paused
   },
   
   // Architecture State
@@ -60,6 +62,7 @@ const ActionTypes = {
   // Architecture
   PLACE_COMPONENT: 'PLACE_COMPONENT',
   REMOVE_COMPONENT: 'REMOVE_COMPONENT',
+  UPGRADE_COMPONENT: 'UPGRADE_COMPONENT',
   ADD_CONNECTION: 'ADD_CONNECTION',
   
   // UI
@@ -148,6 +151,8 @@ function appReducer(state, action) {
           totalDuration: action.payload.duration,
           startTime: Date.now(),
           pauseCount: 0,
+          pausedAt: null,
+          totalPausedTime: 0,
         },
       };
     
@@ -158,17 +163,24 @@ function appReducer(state, action) {
           ...state.timerState,
           isPaused: true,
           pauseCount: state.timerState.pauseCount + 1,
+          pausedAt: Date.now(),
         },
       };
     
-    case ActionTypes.RESUME_TIMER:
+    case ActionTypes.RESUME_TIMER: {
+      const pauseDuration = state.timerState.pausedAt 
+        ? Date.now() - state.timerState.pausedAt 
+        : 0;
       return {
         ...state,
         timerState: {
           ...state.timerState,
           isPaused: false,
+          pausedAt: null,
+          totalPausedTime: state.timerState.totalPausedTime + pauseDuration,
         },
       };
+    }
     
     case ActionTypes.TICK_TIMER:
       return {
@@ -215,6 +227,19 @@ function appReducer(state, action) {
         architecture: {
           ...state.architecture,
           connections: [...state.architecture.connections, action.payload],
+        },
+      };
+    
+    case ActionTypes.UPGRADE_COMPONENT:
+      return {
+        ...state,
+        architecture: {
+          ...state.architecture,
+          placedComponents: state.architecture.placedComponents.map((c) =>
+            c.id === action.payload.componentId
+              ? { ...c, tier: action.payload.newTier }
+              : c
+          ),
         },
       };
     
@@ -320,6 +345,8 @@ export function AppProvider({ children }) {
       dispatch({ type: ActionTypes.PLACE_COMPONENT, payload: component }), []),
     removeComponent: useCallback((componentId) => 
       dispatch({ type: ActionTypes.REMOVE_COMPONENT, payload: componentId }), []),
+    upgradeComponent: useCallback((componentId, newTier) => 
+      dispatch({ type: ActionTypes.UPGRADE_COMPONENT, payload: { componentId, newTier } }), []),
     addConnection: useCallback((connection) => 
       dispatch({ type: ActionTypes.ADD_CONNECTION, payload: connection }), []),
     

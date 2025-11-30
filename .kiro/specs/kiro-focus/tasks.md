@@ -29,8 +29,8 @@
     - **Property 5: Partial Credit Calculation for Abandonment**
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5, 1.6**
 
-- [ ] 3. Implement timer logic and component
-  - [ ] 3.1 Create timerLogic.js with timer state management
+- [x] 3. Implement timer logic and component
+  - [x] 3.1 Create timerLogic.js with timer state management
     - Implement startTimer(duration) returning initial state with startTime timestamp
     - Implement pauseTimer(state) returning paused state
     - Implement resumeTimer(state) returning resumed state
@@ -47,7 +47,7 @@
     - **Property 6: Final Minute Detection**
     - **Property 23: Timer Accuracy Under Throttling**
     - **Validates: Requirements 1.1, 1.2, 1.3, 1.4, 1.5, 1.7, 12.1, 12.2, 12.3**
-  - [ ] 3.3 Create Timer.jsx component
+  - [x] 3.3 Create Timer.jsx component
     - Implement duration preset buttons (15, 25, 45, 60, 90 min)
     - Implement countdown display in MM:SS format
     - Implement circular progress ring SVG
@@ -57,33 +57,33 @@
     - Wire up to AppContext for state and credit awarding
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 12.4_
 
-- [ ] 4. Implement Kiro mascot component
-  - [ ] 4.1 Create kiroLogic.js for emotion state management 
-    - Get the Kiro mascot image from online or ask the user to do this manual)
+- [x] 4. Implement Kiro mascot component
+  - [x] 4.1 Create kiroLogic.js for emotion state management
     - Implement getEmotionForEvent(event) mapping events to emotions
+    - Get the Kiro mascot image from online or ask the user to do this manual
     - Implement message queue management (enqueue, dequeue, peek)
     - _Requirements: 3.2, 3.3, 3.4, 3.5, 3.7_
   - [ ]* 4.2 Write property tests for Kiro logic
     - **Property 11: Kiro Emotion State Transitions**
     - **Property 12: Message Queue Ordering**
     - **Validates: Requirements 3.2, 3.3, 3.4, 3.5, 3.7**
-  - [ ] 4.3 Create KiroMascot.jsx component
+  - [x] 4.3 Create KiroMascot.jsx component
     - Implement ghost SVG/CSS with semi-transparent body and purple glow
     - Implement 5 emotion animations (idle, encouraging, celebrating, concerned, teaching)
     - Implement speech bubble with typewriter effect (30ms per character)
     - Implement message queue display logic with auto-dismiss
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7_
 
-- [ ] 5. Checkpoint - Ensure all tests pass
+- [x] 5. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Implement component shop
-  - [ ] 6.1 Create components.js data file with component catalog
+- [x] 6. Implement component shop
+  - [x] 6.1 Create components.js data file with component catalog
     - Define all 5 components (EC2, S3, RDS, LoadBalancer, CloudFront)
     - Include all fields: id, type, name, descriptions, icon, cost, tier (always 1 for Phase 1), prerequisites, category, realWorldExample
     - Note: upgradeTree included in data but upgrade UI deferred to Phase 2
     - _Requirements: 4.1_
-  - [ ] 6.2 Create shopLogic.js with purchase logic
+  - [x] 6.2 Create shopLogic.js with purchase logic
     - Implement canPurchase(component, credits, ownedComponents)
     - Implement checkPrerequisites(component, ownedComponents)
     - Implement processPurchase(component, credits, ownedComponents)
@@ -93,25 +93,25 @@
     - **Property 14: Prerequisite Checking**
     - **Property 15: Purchase Transaction Integrity**
     - **Validates: Requirements 4.2, 4.3, 4.4, 4.5**
-  - [ ] 6.4 Create Modal.jsx reusable component
+  - [x] 6.4 Create Modal.jsx reusable component
     - Generic modal wrapper with overlay and close button
     - Content slot for flexible usage
     - Escape key to close
     - Centralized z-index management
     - _Requirements: 4.6, 5.5_
-  - [ ] 6.5 Create ComponentCard.jsx component
+  - [x] 6.5 Create ComponentCard.jsx component
     - Display component icon, name, description, cost
     - Implement available/insufficient/locked visual states
     - Implement purchase button with appropriate styling
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
-  - [ ] 6.6 Create ComponentShop.jsx component
+  - [x] 6.6 Create ComponentShop.jsx component
     - Display grid of ComponentCards
     - Implement "More Info" modal with full description and real-world example
     - Wire up purchase flow to AppContext
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6_
 
-- [ ] 7. Implement infrastructure canvas
-  - [ ] 7.1 Create canvasLogic.js with grid and placement logic
+- [x] 7. Implement infrastructure canvas
+  - [x] 7.1 Create canvasLogic.js with grid and placement logic
     - Implement snapToGrid(position) returning snapped coordinates
     - Implement isValidPlacement(position, placedComponents)
     - Implement generateComponentId(type, placedComponents)
@@ -121,7 +121,7 @@
     - **Property 16: Grid Snap Calculation**
     - **Property 17: Empty State Detection**
     - **Validates: Requirements 5.2, 5.3, 5.6**
-  - [ ] 7.3 Create InfrastructureCanvas.jsx component
+  - [x] 7.3 Create InfrastructureCanvas.jsx component
     - Implement 800x600 canvas with 40x40 grid background
     - Implement drag-and-drop with ghost preview
     - Implement snap-to-grid placement
@@ -130,8 +130,8 @@
     - Implement empty state message
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
 
-- [ ] 8. Implement session history and statistics
-  - [ ] 8.1 Create sessionHistory.js with history logic
+- [x] 8. Implement session history and statistics
+  - [x] 8.1 Create sessionHistory.js with history logic
     - Implement groupSessionsByDate(sessions)
     - Implement calculateStatistics(sessions)
     - Implement calculateStreak(sessions)
@@ -141,15 +141,15 @@
     - **Property 19: Session Display Completeness**
     - **Property 20: Statistics Calculation**
     - **Validates: Requirements 6.1, 6.2, 6.3**
-  - [ ] 8.3 Create SessionHistory.jsx component
+  - [x] 8.3 Create SessionHistory.jsx component
     - Display sessions grouped by date with completion icons
     - Display summary statistics panel
     - Implement export button triggering JSON download
     - Implement import button with file picker
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 9. Implement export/import functionality
-  - [ ] 9.1 Create storageHelpers.js with export/import logic
+- [x] 9. Implement export/import functionality
+  - [x] 9.1 Create storageHelpers.js with export/import logic
     - Define CURRENT_VERSION constant ("1.0.0")
     - Implement exportData(userProgress, architecture) returning JSON string with version
     - Implement validateImportData(jsonString) with version checking
@@ -161,38 +161,38 @@
     - **Property 24: Export Version Validation**
     - **Validates: Requirements 6.4, 6.5, 10.2, 10.3, 10.4, 10.5, 10.6**
 
-- [ ] 10. Checkpoint - Ensure all tests pass
+- [x] 10. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 11. Implement AI agent system
-  - [ ] 11.1 Create agentPrompts.js with system prompts
+- [x] 11. Implement AI agent system
+  - [x] 11.1 Create agentPrompts.js with system prompts
     - Define FOCUS_COACH_SYSTEM_PROMPT constant
     - Define ARCHITECT_AGENT_SYSTEM_PROMPT constant
     - _Requirements: 7.1, 8.1_
-  - [ ] 11.2 Create kiroDialogue.js with fallback messages
+  - [x] 11.2 Create kiroDialogue.js with fallback messages
     - Define fallback messages for each agent mode (encouragement, analysis, motivation, supportive)
     - Define fallback architect explanations for each component type
     - Define generic error recovery messages
     - _Requirements: 11.1, 11.3_
-  - [ ] 11.3 Create agentApiClient.js with API wrapper
+  - [x] 11.3 Create agentApiClient.js with API wrapper
     - Implement callAgentAPI(prompt, maxTokens) with 5s timeout
     - Implement retry logic (1 retry on timeout)
     - Implement rate limiter (max 5 messages/hour)
     - Implement error logging and fallback triggering
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5_
-  - [ ] 11.4 Create focusCoachAgent.js
+  - [x] 11.4 Create focusCoachAgent.js
     - Implement buildFocusCoachInput(mode, sessionData)
     - Implement callFocusCoachAgent(input) using agentApiClient
     - Implement parseFocusCoachResponse(response) with defaults for missing fields
     - Wire fallback messages from kiroDialogue.js on error
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 11.4_
-  - [ ] 11.5 Create architectAgent.js
+  - [x] 11.5 Create architectAgent.js
     - Implement buildArchitectInput(components, credits, lastAction)
     - Implement callArchitectAgent(input) using agentApiClient
     - Implement parseArchitectResponse(response) with defaults for missing fields
     - Wire fallback messages from kiroDialogue.js on error
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 11.4_
-  - [ ] 11.6 Create useAgents.js custom hook
+  - [x] 11.6 Create useAgents.js custom hook
     - Implement useFocusCoach() hook with session event handlers
     - Implement useArchitect() hook with purchase event handlers
     - Implement re-engagement detection (daysSinceLastSession >= 1)
@@ -209,8 +209,8 @@
     - Test: Agent messages trigger correct Kiro emotions
     - _Requirements: 11.1, 11.2, 11.3, 11.4_
 
-- [ ] 12. Implement credit display component
-  - [ ] 12.1 Create CreditDisplay.jsx component
+- [x] 12. Implement credit display component
+  - [x] 12.1 Create CreditDisplay.jsx component
     - Display current credits with lightning bolt icon
     - Implement animated counter (incremental counting, not instant)
     - Implement scale-up animation on change
@@ -218,15 +218,15 @@
     - Implement low credits warning state (< 50 credits)
     - _Requirements: 2.6_
 
-- [ ] 13. Wire up complete application flow
-  - [ ] 13.1 Integrate all components in App.jsx
+- [x] 13. Wire up complete application flow
+  - [x] 13.1 Integrate all components in App.jsx
     - Set up navigation between views (timer, shop, canvas, history)
     - Wire Timer completion to credit awarding and Focus Coach
     - Wire Shop purchase to Architect Agent
     - Wire Canvas view to Architect validation
     - Ensure Kiro mascot receives all agent messages
     - _Requirements: All_
-  - [ ] 13.2 Apply consistent dark theme styling
+  - [x] 13.2 Apply consistent dark theme styling
     - Apply background color #0a0e27 to all views
     - Apply purple accent #b794f6 to interactive elements
     - Apply success green #48bb78 and warning orange #ed8936
@@ -234,22 +234,22 @@
     - Ensure smooth 60fps animations
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6_
 
-- [ ] 14. Final Checkpoint - Ensure all tests pass
+- [x] 14. Final Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 15. (OPTIONAL) Phase 2 Stretch Goals
-  - [ ] 15.1 Implement component upgrade system
+- [-] 15. (OPTIONAL) Phase 2 Stretch Goals
+  - [x] 15.1 Implement component upgrade system
     - Add "Upgrade" button to placed component info modal
     - Implement upgrade cost deduction and tier increment
     - Trigger Architect Agent explanation of tier benefits
     - _Requirements: 4.6 (extended)_
-  - [ ] 15.2 Implement connection system
+  - [x] 15.2 Implement connection system
     - Add "Connect Mode" button to canvas
     - Click component A, then component B to create connection
     - Draw dashed line between components with animated data flow
     - Store connections in architecture state
     - _Requirements: 5.4 (extended)_
-  - [ ] 15.3 Implement MCP integration for session persistence
+  - [x] 15.3 Implement MCP integration for session persistence
     - Set up filesystem MCP for session log file
     - Auto-save sessions to local file on completion
     - Auto-load sessions on app start
