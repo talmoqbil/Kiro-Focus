@@ -46,7 +46,50 @@ The architecture follows a component-based design with centralized state managem
 3. Agent responses flow to KiroMascot for display
 4. Timer uses setInterval for countdown, updates state every second
 5. Credit calculations happen on session completion
-6. Export/Import handles all persistence (no localStorage)
+6. Export/Import handles manual persistence
+7. Cloud State System auto-saves on key events (session complete, purchase, canvas change)
+8. On app startup, Cloud State System loads persisted state from backend
+
+### Cloud Auto-Save Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     Frontend (React App)                        │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │              Cloud State Module                          │   │
+│  │  - getOrCreateUserId() → localStorage                   │   │
+│  │  - loadStateFromCloud(userId) → GET /state              │   │
+│  │  - saveStateToCloud(userId, state) → PUT /state         │   │
+│  │  - buildCloudState(appState) → extract persistable data │   │
+│  │  - applyCloudState(cloudState) → restore to app state   │   │
+│  └─────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   AWS API Gateway                               │
+│  GET /state?userId=xxx     │     PUT /state                    │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   AWS Lambda Functions                          │
+│  ┌─────────────────────┐    ┌─────────────────────┐           │
+│  │  loadState Lambda   │    │  saveState Lambda   │           │
+│  │  - GET handler      │    │  - PUT handler      │           │
+│  │  - CORS headers     │    │  - CORS headers     │           │
+│  └─────────────────────┘    └─────────────────────┘           │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   AWS DynamoDB                                  │
+│  Table: KiroFocusUserState                                     │
+│  - Partition Key: userId (String)                              │
+│  - Attributes: state (JSON), updatedAt (Number)                │
+│  - Billing: PAY_PER_REQUEST (on-demand)                        │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ### Timer Implementation Pattern (Drift Correction)
 
@@ -456,6 +499,180 @@ interface ExportData {
 }
 ```
 
+### Cloud State Interfaces
+
+#### User ID Management
+```typescript
+// localStorage key for anonymous user ID
+const USER_ID_KEY = 'kiro-focus-user-id';
+
+/**
+ * Get or create anonymous user ID
+ * Uses localStorage to persist across sessions
+ */
+function getOrCreateUserId(): string {
+  let userId = localStorage.getItem(USER_ID_KEY);
+  if (!userId) {
+    userId = crypto.randomUUID();
+    localStorage.setItem(USER_ID_KEY, userId);
+  }
+  return userId;
+}
+```
+
+#### Cloud State Data Structure
+```typescript
+interface CloudState {
+  credits: number;
+  currentStreak: number;
+  lastSessionDate: string | null;
+  ownedComponents: string[];
+  placedComponents: PlacedComponent[];
+  connections: Connection[];
+  sessionHistory: Session[]; // Limited to 100 most recent
+}
+
+/**
+ * Extract persistable state from app state
+ */
+function buildCloudState(state: AppState): CloudState {
+  return {
+    credits: state.userProgress.credits,
+    currentStreak: state.userProgress.currentStreak,
+    lastSessionDate: state.userProgress.lastSessionDate,
+    ownedComponents: state.userProgress.ownedComponents,
+    placedComponents: state.architecture.placedComponents,
+    connections: state.architecture.connections,
+    sessionHistory: state.userProgress.sessionHistory.slice(-100) // Limit to 100
+  };
+}
+
+/**
+ * Apply cloud state to app state
+ */
+function applyCloudState(cloudState: CloudState, actions: AppActions): void {
+  // Restore user progress
+  actions.setCredits(cloudState.credits);
+  actions.updateStreak(cloudState.currentStreak);
+  // ... restore other fields via importState action
+}
+```
+
+#### Cloud API Client
+```typescript
+interface CloudAPIConfig {
+  baseUrl: string; // From VITE_API_BASE_URL environment variable
+}
+
+interface LoadStateResponse {
+  success: boolean;
+  state: CloudState | null;
+  error?: string;
+}
+
+interface SaveStateResponse {
+  success: boolean;
+  error?: string;
+}
+
+/**
+ * Load state from cloud backend
+ */
+async function loadStateFromCloud(userId: string): Promise<LoadStateResponse> {
+  const response = await fetch(`${API_BASE_URL}/state?userId=${userId}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  return response.json();
+}
+
+/**
+ * Save state to cloud backend
+ */
+async function saveStateToCloud(userId: string, state: CloudState): Promise<SaveStateResponse> {
+  const response = await fetch(`${API_BASE_URL}/state`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, state })
+  });
+  return response.json();
+}
+```
+
+#### Lambda Function Interfaces
+```typescript
+// Load State Lambda (GET /state)
+interface LoadStateLambdaEvent {
+  queryStringParameters: {
+    userId: string;
+  };
+}
+
+interface LoadStateLambdaResponse {
+  statusCode: 200;
+  headers: CORSHeaders;
+  body: string; // JSON: { success: true, state: CloudState | null }
+}
+
+// Save State Lambda (PUT /state)
+interface SaveStateLambdaEvent {
+  body: string; // JSON: { userId: string, state: CloudState }
+}
+
+interface SaveStateLambdaResponse {
+  statusCode: 200;
+  headers: CORSHeaders;
+  body: string; // JSON: { success: true }
+}
+
+// CORS Headers (required for all responses)
+interface CORSHeaders {
+  'Access-Control-Allow-Origin': '*';
+  'Access-Control-Allow-Headers': 'Content-Type';
+  'Access-Control-Allow-Methods': 'GET,PUT,OPTIONS';
+}
+```
+
+#### DynamoDB Schema
+```typescript
+// DynamoDB Table: KiroFocusUserState
+interface DynamoDBItem {
+  userId: string;      // Partition Key
+  state: CloudState;   // JSON object
+  updatedAt: number;   // Unix timestamp
+}
+
+// DynamoDB Table Configuration
+const TABLE_CONFIG = {
+  TableName: 'KiroFocusUserState',
+  KeySchema: [{ AttributeName: 'userId', KeyType: 'HASH' }],
+  AttributeDefinitions: [{ AttributeName: 'userId', AttributeType: 'S' }],
+  BillingMode: 'PAY_PER_REQUEST'
+};
+```
+
+#### Amplify Configuration
+```yaml
+# amplify.yml
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - cd kiro-focus
+        - npm ci
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: kiro-focus/dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - kiro-focus/node_modules/**/*
+```
+
 ### Component Catalog
 ```typescript
 const COMPONENTS_CATALOG: ShopComponent[] = [
@@ -647,6 +864,36 @@ const COMPONENTS_CATALOG: ShopComponent[] = [
 
 **Validates: Requirements 11.5**
 
+### Property 26: Anonymous User ID Persistence
+
+*For any* application session, calling getOrCreateUserId() multiple times SHALL return the same user ID, and the ID SHALL persist across page refreshes.
+
+**Validates: Requirements 13.1, 13.2**
+
+### Property 27: Cloud State Round-Trip
+
+*For any* valid application state S, saving to cloud and then loading from cloud SHALL restore a state S' where S'.credits === S.credits, S'.currentStreak === S.currentStreak, S'.ownedComponents is equivalent to S.ownedComponents, and S'.placedComponents is equivalent to S.placedComponents.
+
+**Validates: Requirements 13.5, 13.6, 13.7, 13.8**
+
+### Property 28: Session History Limit
+
+*For any* cloud state save operation, the sessionHistory array SHALL contain at most 100 sessions, with the most recent sessions preserved.
+
+**Validates: Requirements 13.5**
+
+### Property 29: Cloud Save Trigger Events
+
+*For any* of the following events: session completion, component purchase, component removal, canvas placement, canvas removal, or JSON import, the Cloud State System SHALL trigger a save operation.
+
+**Validates: Requirements 13.6, 13.7, 13.8, 13.9**
+
+### Property 30: Graceful Degradation on Cloud Failure
+
+*For any* cloud save or load failure, the application SHALL continue functioning normally with local state, without displaying error messages that disrupt the user experience.
+
+**Validates: Requirements 13.10, 13.11**
+
 ## Error Handling
 
 ### Timer Errors
@@ -668,6 +915,14 @@ const COMPONENTS_CATALOG: ShopComponent[] = [
 - **Canvas overflow**: Prevent placement outside grid bounds
 - **Duplicate component placement**: Allow multiple instances with unique IDs (ec2-1, ec2-2)
 - **Credit underflow**: Prevent purchase if it would result in negative credits
+
+### Cloud State Errors
+- **Cloud load timeout**: Start with default state, continue normally
+- **Cloud load network error**: Start with default state, continue normally
+- **Cloud save timeout**: Log error silently, do not disrupt user
+- **Cloud save network error**: Log error silently, do not disrupt user
+- **Invalid cloud state format**: Ignore cloud state, start with defaults
+- **Missing userId in localStorage**: Generate new userId, start fresh
 
 ## Testing Strategy
 
@@ -703,7 +958,8 @@ src/
 │   ├── sessionHistory.test.js        // Properties 18, 19, 20
 │   ├── exportImport.test.js          // Property 21
 │   ├── kiroMascot.test.js            // Properties 11, 12
-│   └── agentIntegration.test.js      // Property 22
+│   ├── agentIntegration.test.js      // Property 22
+│   └── cloudState.test.js            // Properties 26, 27, 28, 29, 30
 ```
 
 ### Test Data Generators

@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback, createContext, useContext } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
-import { Clock, ShoppingBag, Layout, History } from 'lucide-react';
+import { Clock, ShoppingBag, Layout, History, Loader2 } from 'lucide-react';
 import Timer from './components/Timer';
 import ComponentShop from './components/ComponentShop';
 import InfrastructureCanvas from './components/InfrastructureCanvas';
@@ -8,6 +8,21 @@ import SessionHistory from './components/SessionHistory';
 import KiroMascot from './components/KiroMascot';
 import CreditDisplay from './components/CreditDisplay';
 import { useFocusCoach } from './hooks/useAgents';
+import { getOrCreateUserId } from './utils/userId';
+import { loadStateFromCloud, saveStateToCloud } from './api/cloudState';
+import { buildCloudState, applyCloudState, isValidCloudState } from './utils/cloudState';
+
+// Cloud State Context for sharing save function across components
+const CloudStateContext = createContext(null);
+
+export function useCloudState() {
+  const context = useContext(CloudStateContext);
+  if (!context) {
+    // Return a no-op if used outside provider (graceful degradation)
+    return { saveCloudState: async () => false, isLoading: false };
+  }
+  return context;
+}
 
 // Navigation component
 function Navigation() {
@@ -51,6 +66,53 @@ function CreditHeader() {
       <CreditDisplay credits={credits} />
     </div>
   );
+}
+
+// Cloud state loading hook
+function useCloudStateLoader() {
+  const { state, actions } = useApp();
+  const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState(null);
+
+  // Load cloud state on mount
+  useEffect(() => {
+    const loadCloudState = async () => {
+      try {
+        const id = getOrCreateUserId();
+        setUserId(id);
+        
+        const cloudState = await loadStateFromCloud(id);
+        
+        if (cloudState && isValidCloudState(cloudState)) {
+          applyCloudState(cloudState, actions);
+        }
+        // If load fails or no state, continue with defaults (graceful degradation)
+      } catch (error) {
+        // Graceful degradation - log but continue with defaults
+        console.warn('Cloud state load failed, using defaults:', error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCloudState();
+  }, [actions]);
+
+  // Save cloud state function
+  const saveCloudState = useCallback(async () => {
+    if (!userId) return false;
+    
+    try {
+      const cloudState = buildCloudState(state);
+      return await saveStateToCloud(userId, cloudState);
+    } catch (error) {
+      // Graceful degradation - log but don't disrupt user
+      console.warn('Cloud state save failed:', error.message);
+      return false;
+    }
+  }, [userId, state]);
+
+  return { isLoading, saveCloudState, userId };
 }
 
 // Re-engagement check on app load
@@ -116,36 +178,54 @@ function KiroMascotWrapper() {
   );
 }
 
-// App layout component
-function AppLayout() {
+// Loading indicator component
+function LoadingIndicator() {
   return (
-    <div className="h-screen bg-kiro-bg flex flex-col overflow-hidden">
-      {/* Re-engagement checker (invisible) */}
-      <ReEngagementChecker />
-      
-      {/* Header with credits */}
-      <header className="border-b border-kiro-purple/20 flex-shrink-0">
-        <div className="max-w-6xl mx-auto flex justify-between items-center px-4">
-          <div className="py-3">
-            <h1 className="text-xl font-bold text-kiro-purple">Kiro Focus</h1>
-          </div>
-          <CreditHeader />
-        </div>
-      </header>
-      
-      {/* Navigation */}
-      <div className="flex-shrink-0">
-        <Navigation />
-      </div>
-      
-      {/* Main content area - fills remaining space */}
-      <main className="flex-1 max-w-6xl mx-auto w-full overflow-auto">
-        <MainContent />
-      </main>
-      
-      {/* Kiro mascot (fixed position) */}
-      <KiroMascotWrapper />
+    <div className="h-screen bg-kiro-bg flex flex-col items-center justify-center">
+      <Loader2 size={48} className="text-kiro-purple animate-spin mb-4" />
+      <p className="text-kiro-purple/70 text-sm">Loading your progress...</p>
     </div>
+  );
+}
+
+// App layout component with cloud state integration
+function AppLayoutWithCloudState() {
+  const { isLoading, saveCloudState } = useCloudStateLoader();
+
+  if (isLoading) {
+    return <LoadingIndicator />;
+  }
+
+  return (
+    <CloudStateContext.Provider value={{ saveCloudState, isLoading }}>
+      <div className="h-screen bg-kiro-bg flex flex-col overflow-hidden">
+        {/* Re-engagement checker (invisible) */}
+        <ReEngagementChecker />
+        
+        {/* Header with credits */}
+        <header className="border-b border-kiro-purple/20 flex-shrink-0">
+          <div className="max-w-6xl mx-auto flex justify-between items-center px-4">
+            <div className="py-3">
+              <h1 className="text-xl font-bold text-kiro-purple">Kiro Focus</h1>
+            </div>
+            <CreditHeader />
+          </div>
+        </header>
+        
+        {/* Navigation */}
+        <div className="flex-shrink-0">
+          <Navigation />
+        </div>
+        
+        {/* Main content area - fills remaining space */}
+        <main className="flex-1 max-w-6xl mx-auto w-full overflow-auto">
+          <MainContent />
+        </main>
+        
+        {/* Kiro mascot (fixed position) */}
+        <KiroMascotWrapper />
+      </div>
+    </CloudStateContext.Provider>
   );
 }
 
@@ -153,7 +233,7 @@ function AppLayout() {
 function App() {
   return (
     <AppProvider>
-      <AppLayout />
+      <AppLayoutWithCloudState />
     </AppProvider>
   );
 }

@@ -13,6 +13,7 @@ import {
 } from '../utils/timerLogic';
 import { calculateTotalCredits, calculatePartialCredits } from '../utils/creditCalculator';
 import { useFocusCoach } from '../hooks/useAgents';
+import { useCloudState } from '../App';
 
 // Min and max duration in seconds
 const MIN_DURATION = 5 * 60; // 5 minutes
@@ -46,6 +47,9 @@ export default function Timer() {
   
   // Focus Coach agent for session events
   const { onSessionStart, onSessionComplete: notifyCoachComplete, onSessionAbandon } = useFocusCoach();
+  
+  // Cloud state for auto-save
+  const { saveCloudState } = useCloudState();
   
   // Keep local ref in sync with state
   useEffect(() => {
@@ -86,7 +90,13 @@ export default function Timer() {
     
     // Notify Focus Coach agent (will set emotion to celebrating)
     notifyCoachComplete(session);
-  }, [timerState, totalDuration, userProgress.currentStreak, actions, notifyCoachComplete]);
+    
+    // Auto-save to cloud after session completion (Requirements 13.6)
+    // Use setTimeout to ensure state is updated before saving
+    setTimeout(() => {
+      saveCloudState();
+    }, 100);
+  }, [timerState, totalDuration, userProgress.currentStreak, actions, notifyCoachComplete, saveCloudState]);
   
   // Handle session abandonment
   const handleAbandon = useCallback(() => {
@@ -112,7 +122,13 @@ export default function Timer() {
     
     // Notify Focus Coach agent (will set emotion to concerned)
     onSessionAbandon(session);
-  }, [actions, onSessionAbandon]);
+    
+    // Auto-save to cloud after session abandonment (Requirements 13.6)
+    // Use setTimeout to ensure state is updated before saving
+    setTimeout(() => {
+      saveCloudState();
+    }, 100);
+  }, [actions, onSessionAbandon, saveCloudState]);
   
   // Timer tick effect
   useEffect(() => {

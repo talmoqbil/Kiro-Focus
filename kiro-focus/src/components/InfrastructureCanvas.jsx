@@ -14,6 +14,7 @@ import {
   isCanvasEmpty
 } from '../utils/canvasLogic';
 import Modal from './Modal';
+import { useCloudState } from '../App';
 
 /**
  * InfrastructureCanvas Component
@@ -59,6 +60,9 @@ export default function InfrastructureCanvas() {
   
   // Architect agent for upgrade explanations
   const { onPurchase: notifyArchitect } = useArchitect();
+  
+  // Cloud state for auto-save
+  const { saveCloudState } = useCloudState();
 
   // Get unplaced owned components (available for placement)
   const getUnplacedComponents = () => {
@@ -112,6 +116,11 @@ export default function InfrastructureCanvas() {
           ...draggedPlacedComponent,
           position: ghostPosition
         });
+        
+        // Auto-save to cloud after component move (Requirements 13.8)
+        setTimeout(() => {
+          saveCloudState();
+        }, 100);
       }
       setDraggedPlacedComponent(null);
       setGhostPosition(null);
@@ -131,6 +140,11 @@ export default function InfrastructureCanvas() {
       };
       
       actions.placeComponent(newComponent);
+      
+      // Auto-save to cloud after component placement (Requirements 13.8)
+      setTimeout(() => {
+        saveCloudState();
+      }, 100);
     }
 
     // Reset drag state
@@ -168,6 +182,11 @@ export default function InfrastructureCanvas() {
         tier: 1
       };
       actions.placeComponent(newComponent);
+      
+      // Auto-save to cloud after component placement (Requirements 13.8)
+      setTimeout(() => {
+        saveCloudState();
+      }, 100);
     }
   };
 
@@ -184,6 +203,11 @@ export default function InfrastructureCanvas() {
       actions.removeComponent(selectedComponent.id);
       setShowModal(false);
       setSelectedComponent(null);
+      
+      // Auto-save to cloud after component removal (Requirements 13.8)
+      setTimeout(() => {
+        saveCloudState();
+      }, 100);
     }
   };
 
@@ -215,6 +239,11 @@ export default function InfrastructureCanvas() {
     
     // Notify architect agent about the upgrade
     notifyArchitect(selectedComponent.data.id);
+    
+    // Auto-save to cloud after component upgrade (Requirements 13.8)
+    setTimeout(() => {
+      saveCloudState();
+    }, 100);
   };
 
   // Get next upgrade tier info

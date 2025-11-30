@@ -6,6 +6,7 @@ import { canPurchase, processPurchase } from '../utils/shopLogic';
 import ComponentCard from './ComponentCard';
 import Modal from './Modal';
 import { useArchitect } from '../hooks/useAgents';
+import { useCloudState } from '../App';
 
 /**
  * ComponentShop Component
@@ -38,6 +39,9 @@ export default function ComponentShop() {
   
   // Architect agent for purchase explanations
   const { onPurchase: notifyArchitect } = useArchitect();
+  
+  // Cloud state for auto-save
+  const { saveCloudState } = useCloudState();
 
   // Handle purchase
   const handlePurchase = (component) => {
@@ -49,6 +53,12 @@ export default function ComponentShop() {
       
       // Trigger Architect Agent to explain the component
       notifyArchitect(component.id);
+      
+      // Auto-save to cloud after purchase (Requirements 13.7)
+      // Use setTimeout to ensure state is updated before saving
+      setTimeout(() => {
+        saveCloudState();
+      }, 100);
     }
   };
 

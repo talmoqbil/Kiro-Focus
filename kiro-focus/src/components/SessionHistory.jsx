@@ -16,6 +16,7 @@ import {
   downloadFile,
   generateExportFilename
 } from '../utils/storageHelpers';
+import { useCloudState } from '../App';
 
 /**
  * SessionHistory Component
@@ -106,6 +107,9 @@ export default function SessionHistory() {
   const [importError, setImportError] = useState(null);
   const [importSuccess, setImportSuccess] = useState(false);
   
+  // Cloud state for auto-save
+  const { saveCloudState } = useCloudState();
+  
   const groupedSessions = groupSessionsByDate(sessionHistory);
   const stats = calculateStatistics(sessionHistory);
 
@@ -136,6 +140,12 @@ export default function SessionHistory() {
       // Import the validated data into state
       actions.importState(result.data);
       setImportSuccess(true);
+      
+      // Auto-save to cloud after successful import (Requirements 13.9)
+      // Use setTimeout to ensure state is updated before saving
+      setTimeout(() => {
+        saveCloudState();
+      }, 100);
       
       // Clear success message after 3 seconds
       setTimeout(() => setImportSuccess(false), 3000);

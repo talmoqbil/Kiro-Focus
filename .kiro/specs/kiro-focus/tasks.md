@@ -254,3 +254,97 @@
     - Auto-save sessions to local file on completion
     - Auto-load sessions on app start
     - _Requirements: 10.2 (extended)_
+
+- [x] 16. Implement Anonymous Cloud Auto-Save
+  - [x] 16.1 Create user ID management utility
+    - Create `src/utils/userId.js` with `getOrCreateUserId()` function
+    - Use `crypto.randomUUID()` to generate unique ID on first load
+    - Store ID in localStorage with key `'kiro-focus-user-id'`
+    - Return existing ID on subsequent visits
+    - _Requirements: 13.1, 13.2_
+  - [x] 16.2 Create cloud state builder and applier utilities
+    - Create `src/utils/cloudState.js` with `buildCloudState(state)` function
+    - Extract: credits, currentStreak, lastSessionDate, ownedComponents, placedComponents, connections, sessionHistory (limit 100)
+    - Create `applyCloudState(cloudState, actions)` function to restore state
+    - _Requirements: 13.5_
+  - [x] 16.3 Create cloud API client
+    - Create `src/api/cloudState.js` with API functions
+    - Implement `loadStateFromCloud(userId)` - GET request to /state?userId=xxx
+    - Implement `saveStateToCloud(userId, state)` - PUT request to /state
+    - Use `import.meta.env.VITE_API_BASE_URL` for API endpoint
+    - Handle errors gracefully (return null/false, don't throw)
+    - _Requirements: 13.3, 13.10, 13.11_
+  - [ ]* 16.4 Write property tests for cloud state utilities
+    - **Property 26: Anonymous User ID Persistence**
+    - **Property 27: Cloud State Round-Trip**
+    - **Property 28: Session History Limit**
+    - **Validates: Requirements 13.1, 13.2, 13.5**
+
+- [x] 17. Integrate cloud auto-save into application
+  - [x] 17.1 Add cloud state loading on app startup
+    - Modify `App.jsx` to load cloud state on mount
+    - Add loading state to show subtle indicator while loading
+    - Call `applyCloudState()` if state exists
+    - Start with defaults if load fails (graceful degradation)
+    - _Requirements: 13.3, 13.4, 13.11_
+  - [x] 17.2 Add auto-save triggers for session events
+    - Modify Timer.jsx to trigger cloud save after session completion
+    - Modify Timer.jsx to trigger cloud save after session abandonment
+    - _Requirements: 13.6_
+  - [x] 17.3 Add auto-save triggers for shop events
+    - Modify ComponentShop.jsx to trigger cloud save after purchase
+    - _Requirements: 13.7_
+  - [x] 17.4 Add auto-save triggers for canvas events
+    - Modify InfrastructureCanvas.jsx to trigger cloud save after component placement
+    - Modify InfrastructureCanvas.jsx to trigger cloud save after component removal
+    - Modify InfrastructureCanvas.jsx to trigger cloud save after component upgrade
+    - _Requirements: 13.8_
+  - [x] 17.5 Add auto-save trigger for JSON import
+    - Modify SessionHistory.jsx to trigger cloud save after successful import
+    - _Requirements: 13.9_
+  - [ ]* 17.6 Write property tests for auto-save triggers
+    - **Property 29: Cloud Save Trigger Events**
+    - **Property 30: Graceful Degradation on Cloud Failure**
+    - **Validates: Requirements 13.6, 13.7, 13.8, 13.9, 13.10**
+
+- [x] 18. Create AWS backend infrastructure
+  - [x] 18.1 Create DynamoDB table configuration
+    - Create `backend/dynamodb-table.json` with table definition
+    - Table name: KiroFocusUserState
+    - Partition key: userId (String)
+    - Billing mode: PAY_PER_REQUEST
+    - _Requirements: 14.5_
+  - [x] 18.2 Create Load State Lambda function
+    - Create `backend/loadState/index.js` Lambda handler
+    - Handle GET requests with userId query parameter
+    - Return stored state or null for new users
+    - Include CORS headers in response
+    - Handle OPTIONS preflight requests
+    - _Requirements: 14.1, 14.3, 14.4_
+  - [x] 18.3 Create Save State Lambda function
+    - Create `backend/saveState/index.js` Lambda handler
+    - Handle PUT requests with userId and state in body
+    - Save state to DynamoDB with updatedAt timestamp
+    - Include CORS headers in response
+    - Handle OPTIONS preflight requests
+    - _Requirements: 14.2, 14.3, 14.4, 14.5_
+
+- [x] 19. Create Amplify deployment configuration
+  - [x] 19.1 Create amplify.yml build configuration
+    - Create `amplify.yml` in project root
+    - Configure preBuild: cd kiro-focus && npm ci
+    - Configure build: npm run build
+    - Set artifacts baseDirectory: kiro-focus/dist
+    - Configure node_modules caching
+    - _Requirements: 15.1, 15.3_
+  - [x] 19.2 Update .env.example with API URL placeholder
+    - Add VITE_API_BASE_URL to .env.example
+    - Document that this should be set in Amplify Console
+    - _Requirements: 15.2_
+
+- [x] 20. Final Checkpoint - Cloud Auto-Save
+  - Ensure all cloud auto-save functionality works end-to-end
+  - Test: New user gets anonymous ID
+  - Test: State persists across page refresh
+  - Test: Export/Import JSON still works
+  - Ask the user if questions arise.

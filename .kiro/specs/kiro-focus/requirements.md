@@ -16,6 +16,11 @@ Kiro Focus is a gamified focus timer application that rewards users with "Cloud 
 - **Streak**: Consecutive days with at least one completed focus session
 - **Component Shop**: The interface where users browse and purchase infrastructure components
 - **Tier**: The upgrade level of a component (1-4), with higher tiers costing more credits
+- **Anonymous User ID**: A unique identifier generated using crypto.randomUUID() stored in localStorage to identify users without authentication
+- **Cloud State**: The subset of application state that is persisted to the cloud backend (credits, streak, components, sessions)
+- **Cloud State System**: The frontend module responsible for loading and saving state to the cloud backend
+- **Lambda Function**: AWS serverless compute service that handles API requests for loading and saving state
+- **DynamoDB**: AWS NoSQL database service used to store user state
 
 ## Requirements
 
@@ -172,3 +177,43 @@ Kiro Focus is a gamified focus timer application that rewards users with "Cloud 
 2. WHEN the user returns to an inactive tab, THEN the Timer System SHALL recalculate timeRemaining based on actual elapsed time from startTime.
 3. WHEN timer drift exceeds 2 seconds, THEN the Timer System SHALL correct the displayed time to match actual elapsed time.
 4. WHEN the timer component unmounts, THEN the Timer System SHALL clear all intervals to prevent memory leaks.
+
+### Requirement 13: Anonymous Cloud Auto-Save
+
+**User Story:** As a user, I want my progress automatically saved to the cloud without requiring login, so that I can refresh the page and continue where I left off.
+
+#### Acceptance Criteria
+
+1. WHEN the application loads for the first time, THEN the Cloud State System SHALL generate a unique anonymous user ID using crypto.randomUUID() and store it in localStorage with key 'kiro-focus-user-id'.
+2. WHEN the application loads on subsequent visits, THEN the Cloud State System SHALL retrieve the existing user ID from localStorage.
+3. WHEN the application starts, THEN the Cloud State System SHALL attempt to load the user's state from the cloud backend using the anonymous user ID.
+4. WHILE the cloud state is loading, THEN the UI System SHALL display a subtle loading indicator.
+5. WHEN cloud state is successfully loaded, THEN the Cloud State System SHALL restore credits, currentStreak, lastSessionDate, ownedComponents, placedComponents, connections, and sessionHistory (limited to 100 most recent).
+6. WHEN a focus session completes, THEN the Cloud State System SHALL automatically save the current state to the cloud.
+7. WHEN a component is purchased or removed from the shop, THEN the Cloud State System SHALL automatically save the current state to the cloud.
+8. WHEN a component is placed or removed on the canvas, THEN the Cloud State System SHALL automatically save the current state to the cloud.
+9. WHEN JSON data is imported, THEN the Cloud State System SHALL automatically save the imported state to the cloud.
+10. WHEN cloud save fails, THEN the application SHALL continue functioning normally without disrupting the user experience.
+11. WHEN cloud load fails on startup, THEN the application SHALL start with default state and continue functioning normally.
+
+### Requirement 14: Cloud Backend Infrastructure
+
+**User Story:** As a system, I want a serverless backend to store user state, so that users can persist their progress without authentication.
+
+#### Acceptance Criteria
+
+1. WHEN the backend receives a GET request to /state with userId parameter, THEN the Lambda Function SHALL return the stored state for that user or null if the user is new.
+2. WHEN the backend receives a PUT request to /state with userId and state in the body, THEN the Lambda Function SHALL save the state to DynamoDB and return success.
+3. WHEN the backend receives any request, THEN the Lambda Function SHALL include CORS headers allowing requests from any origin.
+4. WHEN the backend receives an OPTIONS request, THEN the Lambda Function SHALL return 200 with CORS headers for preflight handling.
+5. WHEN storing state in DynamoDB, THEN the Storage System SHALL use userId as the partition key and include an updatedAt timestamp.
+
+### Requirement 15: Amplify Deployment Configuration
+
+**User Story:** As a developer, I want the application configured for AWS Amplify deployment, so that the app can be hosted and deployed easily.
+
+#### Acceptance Criteria
+
+1. WHEN Amplify builds the application, THEN the Build System SHALL execute npm run build and output to the dist directory.
+2. WHEN Amplify deploys the application, THEN the Build System SHALL use the VITE_API_BASE_URL environment variable for the backend API endpoint.
+3. WHEN caching dependencies, THEN the Build System SHALL cache the node_modules directory to speed up subsequent builds.
