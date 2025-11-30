@@ -19,7 +19,7 @@ export function useCloudState() {
   const context = useContext(CloudStateContext);
   if (!context) {
     // Return a no-op if used outside provider (graceful degradation)
-    return { saveCloudState: async () => false, isLoading: false };
+    return { triggerCloudSave: () => {}, isLoading: false };
   }
   return context;
 }
@@ -73,6 +73,8 @@ function useCloudStateLoader() {
   const { state, actions } = useApp();
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState(null);
+  const [saveCounter, setSaveCounter] = useState(0);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   // Load cloud state on mount
   useEffect(() => {
@@ -92,27 +94,36 @@ function useCloudStateLoader() {
         console.warn('Cloud state load failed, using defaults:', error.message);
       } finally {
         setIsLoading(false);
+        setHasLoaded(true);
       }
     };
 
     loadCloudState();
   }, [actions]);
 
-  // Save cloud state function
-  const saveCloudState = useCallback(async () => {
-    if (!userId) return false;
+  // Save when saveCounter changes (triggered by triggerCloudSave)
+  useEffect(() => {
+    if (!userId || !hasLoaded || saveCounter === 0) return;
     
-    try {
-      const cloudState = buildCloudState(state);
-      return await saveStateToCloud(userId, cloudState);
-    } catch (error) {
-      // Graceful degradation - log but don't disrupt user
-      console.warn('Cloud state save failed:', error.message);
-      return false;
-    }
-  }, [userId, state]);
+    const doSave = async () => {
+      try {
+        const cloudState = buildCloudState(state);
+        await saveStateToCloud(userId, cloudState);
+        console.log('Cloud state saved successfully');
+      } catch (error) {
+        console.warn('Cloud state save failed:', error.message);
+      }
+    };
+    
+    doSave();
+  }, [saveCounter, userId, hasLoaded, state]);
 
-  return { isLoading, saveCloudState, userId };
+  // Trigger a save - increments counter which triggers the useEffect
+  const triggerCloudSave = useCallback(() => {
+    setSaveCounter(c => c + 1);
+  }, []);
+
+  return { isLoading, triggerCloudSave, userId };
 }
 
 // Re-engagement check on app load
@@ -190,14 +201,14 @@ function LoadingIndicator() {
 
 // App layout component with cloud state integration
 function AppLayoutWithCloudState() {
-  const { isLoading, saveCloudState } = useCloudStateLoader();
+  const { isLoading, triggerCloudSave } = useCloudStateLoader();
 
   if (isLoading) {
     return <LoadingIndicator />;
   }
 
   return (
-    <CloudStateContext.Provider value={{ saveCloudState, isLoading }}>
+    <CloudStateContext.Provider value={{ triggerCloudSave, isLoading }}>
       <div className="h-screen bg-kiro-bg flex flex-col overflow-hidden">
         {/* Re-engagement checker (invisible) */}
         <ReEngagementChecker />

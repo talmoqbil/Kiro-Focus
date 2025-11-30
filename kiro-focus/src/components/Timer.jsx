@@ -49,7 +49,7 @@ export default function Timer() {
   const { onSessionStart, onSessionComplete: notifyCoachComplete, onSessionAbandon } = useFocusCoach();
   
   // Cloud state for auto-save
-  const { saveCloudState } = useCloudState();
+  const { triggerCloudSave } = useCloudState();
   
   // Keep local ref in sync with state
   useEffect(() => {
@@ -94,9 +94,9 @@ export default function Timer() {
     // Auto-save to cloud after session completion (Requirements 13.6)
     // Use setTimeout to ensure state is updated before saving
     setTimeout(() => {
-      saveCloudState();
+      triggerCloudSave();
     }, 100);
-  }, [timerState, totalDuration, userProgress.currentStreak, actions, notifyCoachComplete, saveCloudState]);
+  }, [timerState, totalDuration, userProgress.currentStreak, actions, notifyCoachComplete, triggerCloudSave]);
   
   // Handle session abandonment
   const handleAbandon = useCallback(() => {
@@ -126,9 +126,9 @@ export default function Timer() {
     // Auto-save to cloud after session abandonment (Requirements 13.6)
     // Use setTimeout to ensure state is updated before saving
     setTimeout(() => {
-      saveCloudState();
+      triggerCloudSave();
     }, 100);
-  }, [actions, onSessionAbandon, saveCloudState]);
+  }, [actions, onSessionAbandon, triggerCloudSave]);
   
   // Timer tick effect
   useEffect(() => {

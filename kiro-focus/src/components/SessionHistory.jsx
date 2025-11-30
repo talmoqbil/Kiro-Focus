@@ -108,7 +108,7 @@ export default function SessionHistory() {
   const [importSuccess, setImportSuccess] = useState(false);
   
   // Cloud state for auto-save
-  const { saveCloudState } = useCloudState();
+  const { triggerCloudSave } = useCloudState();
   
   const groupedSessions = groupSessionsByDate(sessionHistory);
   const stats = calculateStatistics(sessionHistory);
@@ -144,7 +144,7 @@ export default function SessionHistory() {
       // Auto-save to cloud after successful import (Requirements 13.9)
       // Use setTimeout to ensure state is updated before saving
       setTimeout(() => {
-        saveCloudState();
+        triggerCloudSave();
       }, 100);
       
       // Clear success message after 3 seconds

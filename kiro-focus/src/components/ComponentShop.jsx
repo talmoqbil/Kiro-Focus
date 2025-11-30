@@ -41,7 +41,7 @@ export default function ComponentShop() {
   const { onPurchase: notifyArchitect } = useArchitect();
   
   // Cloud state for auto-save
-  const { saveCloudState } = useCloudState();
+  const { triggerCloudSave } = useCloudState();
 
   // Handle purchase
   const handlePurchase = (component) => {
@@ -57,7 +57,7 @@ export default function ComponentShop() {
       // Auto-save to cloud after purchase (Requirements 13.7)
       // Use setTimeout to ensure state is updated before saving
       setTimeout(() => {
-        saveCloudState();
+        triggerCloudSave();
       }, 100);
     }
   };

@@ -62,7 +62,7 @@ export default function InfrastructureCanvas() {
   const { onPurchase: notifyArchitect } = useArchitect();
   
   // Cloud state for auto-save
-  const { saveCloudState } = useCloudState();
+  const { triggerCloudSave } = useCloudState();
 
   // Get unplaced owned components (available for placement)
   const getUnplacedComponents = () => {
@@ -119,7 +119,7 @@ export default function InfrastructureCanvas() {
         
         // Auto-save to cloud after component move (Requirements 13.8)
         setTimeout(() => {
-          saveCloudState();
+          triggerCloudSave();
         }, 100);
       }
       setDraggedPlacedComponent(null);
@@ -143,7 +143,7 @@ export default function InfrastructureCanvas() {
       
       // Auto-save to cloud after component placement (Requirements 13.8)
       setTimeout(() => {
-        saveCloudState();
+        triggerCloudSave();
       }, 100);
     }
 
@@ -185,7 +185,7 @@ export default function InfrastructureCanvas() {
       
       // Auto-save to cloud after component placement (Requirements 13.8)
       setTimeout(() => {
-        saveCloudState();
+        triggerCloudSave();
       }, 100);
     }
   };
@@ -206,7 +206,7 @@ export default function InfrastructureCanvas() {
       
       // Auto-save to cloud after component removal (Requirements 13.8)
       setTimeout(() => {
-        saveCloudState();
+        triggerCloudSave();
       }, 100);
     }
   };
@@ -242,7 +242,7 @@ export default function InfrastructureCanvas() {
     
     // Auto-save to cloud after component upgrade (Requirements 13.8)
     setTimeout(() => {
-      saveCloudState();
+      triggerCloudSave();
     }, 100);
   };
 
