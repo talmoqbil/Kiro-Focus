@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, createContext, useContext } from 'react';
+import { useEffect, useState, useCallback, createContext, useContext, useRef } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Clock, ShoppingBag, Layout, History, Loader2 } from 'lucide-react';
 import Timer from './components/Timer';
@@ -73,55 +73,67 @@ function useCloudStateLoader() {
   const { state, actions } = useApp();
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState(null);
-  const [saveCounter, setSaveCounter] = useState(0);
   const [hasLoaded, setHasLoaded] = useState(false);
-
-  // Load cloud state on mount
+  const stateRef = useRef(state);
+  const userIdRef = useRef(null);
+  
+  // Keep refs in sync with current values
   useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+  
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
+
+  // Load cloud state on mount (only once)
+  useEffect(() => {
+    let mounted = true;
+    
     const loadCloudState = async () => {
       try {
         const id = getOrCreateUserId();
+        if (!mounted) return;
         setUserId(id);
+        userIdRef.current = id;
         
         const cloudState = await loadStateFromCloud(id);
+        
+        if (!mounted) return;
         
         if (cloudState && isValidCloudState(cloudState)) {
           applyCloudState(cloudState, actions);
         }
-        // If load fails or no state, continue with defaults (graceful degradation)
       } catch (error) {
-        // Graceful degradation - log but continue with defaults
         console.warn('Cloud state load failed, using defaults:', error.message);
       } finally {
-        setIsLoading(false);
-        setHasLoaded(true);
+        if (mounted) {
+          setIsLoading(false);
+          setHasLoaded(true);
+        }
       }
     };
 
     loadCloudState();
-  }, [actions]);
-
-  // Save when saveCounter changes (triggered by triggerCloudSave)
-  useEffect(() => {
-    if (!userId || !hasLoaded || saveCounter === 0) return;
     
-    const doSave = async () => {
+    return () => { mounted = false; };
+  }, []); // Empty deps - only run once on mount
+
+  // Trigger a save using current state from ref
+  const triggerCloudSave = useCallback(() => {
+    if (!userIdRef.current || !hasLoaded) return;
+    
+    // Use setTimeout to ensure state has updated
+    setTimeout(async () => {
       try {
-        const cloudState = buildCloudState(state);
-        await saveStateToCloud(userId, cloudState);
+        const cloudState = buildCloudState(stateRef.current);
+        await saveStateToCloud(userIdRef.current, cloudState);
         console.log('Cloud state saved successfully');
       } catch (error) {
         console.warn('Cloud state save failed:', error.message);
       }
-    };
-    
-    doSave();
-  }, [saveCounter, userId, hasLoaded, state]);
-
-  // Trigger a save - increments counter which triggers the useEffect
-  const triggerCloudSave = useCallback(() => {
-    setSaveCounter(c => c + 1);
-  }, []);
+    }, 200);
+  }, [hasLoaded]);
 
   return { isLoading, triggerCloudSave, userId };
 }
