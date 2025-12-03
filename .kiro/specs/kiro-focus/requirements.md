@@ -217,3 +217,79 @@ Kiro Focus is a gamified focus timer application that rewards users with "Cloud 
 1. WHEN Amplify builds the application, THEN the Build System SHALL execute npm run build and output to the dist directory.
 2. WHEN Amplify deploys the application, THEN the Build System SHALL use the VITE_API_BASE_URL environment variable for the backend API endpoint.
 3. WHEN caching dependencies, THEN the Build System SHALL cache the node_modules directory to speed up subsequent builds.
+
+
+### Requirement 16: Extended Component Catalog and Categories
+
+**User Story:** As a user, I want a richer set of AWS-style components that still behave sensibly together, so that I can build realistic architectures and learn AWS patterns.
+
+#### Acceptance Criteria
+
+1. WHEN the Component Shop loads, THEN the Shop Interface SHALL expose at least the following services organized by category:
+   - Edge/Networking/DNS: Route 53, CloudFront CDN, Application Load Balancer
+   - Compute/Containers/Serverless: EC2 Instance, ECS Service, Lambda Function
+   - Storage/Databases/Cache: S3 Bucket, RDS Database, DynamoDB Table, ElastiCache (Redis)
+   - Async/Integration: SQS Queue, SNS Topic, EventBridge Bus
+   - Auth/Security/Observability: Cognito User Pool, WAF Web ACL, CloudWatch
+2. WHEN defining a component in the catalog, THEN the Component System SHALL include: id (string key), name (display name), category, cost, short description, full description, real-world usage example, and docLinks array.
+3. WHEN assigning categories, THEN each component SHALL belong to exactly one category from: edge, load_balancer, compute, serverless, storage, database, cache, async, auth, security, observability.
+4. WHEN the catalog is accessed, THEN the Component System SHALL serve as the single source of truth for shop display, canvas connection validation, and agent recommendations.
+
+### Requirement 17: Category-Based Connection Validation
+
+**User Story:** As a user, I want the canvas to prevent unrealistic connections (like connecting Cognito to DynamoDB directly) and allow sensible ones, so that I learn correct mental models of AWS architecture.
+
+#### Acceptance Criteria
+
+1. WHEN a user attempts to create a connection, THEN the Canvas System SHALL validate the connection using category-based rules.
+2. WHEN validating connections, THEN the Canvas System SHALL apply these rules:
+   - edge (Route 53) → may connect to edge (CloudFront) or load_balancer
+   - edge (CloudFront) → may connect to load_balancer, compute, serverless, or storage
+   - load_balancer → may connect to compute or serverless
+   - compute or serverless → may connect to database, cache, storage, or async
+   - database → may connect to async (for events/streams)
+   - storage (S3) → may connect to async (S3 events)
+   - async (SQS/SNS/EventBridge) → may connect to serverless or compute
+   - auth (Cognito) → may connect to edge, load_balancer, or serverless
+   - security (WAF) → may connect to edge or load_balancer
+   - Any category → may connect to observability (CloudWatch) as a sink
+   - observability SHALL NOT be the source of any connection
+3. WHEN a connection is not permitted by category rules, THEN the Canvas System SHALL reject the connection and display an explanation message.
+4. WHEN implementing validation, THEN the Canvas System SHALL use a central helper function (isValidConnection) that can be easily extended.
+
+### Requirement 18: Static Learning Links for Components
+
+**User Story:** As a user, I want quick access to official AWS docs or tutorials for each component I buy or inspect, so I can learn more while playing.
+
+#### Acceptance Criteria
+
+1. WHEN defining a component, THEN the Component Catalog SHALL include a docLinks field with 2-3 hand-picked links to AWS documentation or tutorials.
+2. WHEN a user opens component details, THEN the Details Modal SHALL display the docLinks as a clickable list that opens in new tabs.
+3. WHEN implementing learning links, THEN the System SHALL use only static links defined in the catalog file with no external tool integration.
+
+### Requirement 19: Goal Prompt and Guided Recommendations
+
+**User Story:** As a user, I want to describe what I want to build ("static website", "serverless API", etc.) and get guidance on which AWS-style components to use and in what general order, so that I know what to buy and place.
+
+#### Acceptance Criteria
+
+1. WHEN the user views the shop or canvas, THEN the UI SHALL provide a Goal input field where the user can type a short architecture description.
+2. WHEN the user submits a goal, THEN the System SHALL call the Cloud Architect Agent with the goal text and list of available component types.
+3. WHEN the Architect Agent responds, THEN the response SHALL contain a short summary (1-2 sentences) and a bullet list of recommended services with rationales.
+4. WHEN storing the response, THEN the System SHALL save the full text as "Current Goal Advice" and optionally parse service names into a recommendedServiceTypes array.
+5. WHEN parsing fails, THEN the System SHALL continue working and display only the text response.
+6. WHEN recommendedServiceTypes exists, THEN the Component Shop SHALL visually highlight components whose type is in that list with a "Recommended" badge.
+7. WHEN the user purchases a component, THEN the Architect Agent SHALL optionally reference the current goal in its explanation if one exists.
+8. WHEN implementing goal recommendations, THEN the System SHALL NOT require JSON parsing or strict schemas from the LLM response.
+
+### Requirement 20: Welcome-Back Message Cooldown
+
+**User Story:** As a user, I don't want to see the welcome-back message repeatedly when I open the app and do nothing, so that Kiro feels helpful, not spammy.
+
+#### Acceptance Criteria
+
+1. WHEN tracking welcome-back messages, THEN the Focus Coach Agent SHALL store a lastWelcomeBackTimestamp in global state.
+2. WHEN determining whether to show a welcome-back message, THEN the Focus Coach Agent SHALL only emit if no welcome-back has been sent this session AND at least 5 minutes (300 seconds) have elapsed since the last recorded welcome-back.
+3. WHEN the user opens the app and remains idle, THEN the System SHALL show at most one welcome-back message.
+4. WHEN the user closes and returns later, THEN a new welcome-back message MAY be shown only if 5+ minutes have elapsed since the last one.
+5. WHEN internal polling or triggers occur, THEN the Agent System SHALL respect the cooldown and SHALL NOT enqueue multiple welcome-backs.

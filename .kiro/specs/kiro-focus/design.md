@@ -993,3 +993,411 @@ const positionArb = fc.record({
 1. **Unit tests** verify specific examples and edge cases
 2. **Property tests** verify universal properties across all valid inputs
 3. Both test types are complementary and required for comprehensive coverage
+
+
+## Extended Component Catalog Design
+
+### Component Category Type
+
+```typescript
+type ComponentCategory = 
+  | 'edge'           // Route 53, CloudFront
+  | 'load_balancer'  // ALB
+  | 'compute'        // EC2, ECS
+  | 'serverless'     // Lambda
+  | 'storage'        // S3
+  | 'database'       // RDS, DynamoDB
+  | 'cache'          // ElastiCache
+  | 'async'          // SQS, SNS, EventBridge
+  | 'auth'           // Cognito
+  | 'security'       // WAF
+  | 'observability'; // CloudWatch
+```
+
+### Extended ShopComponent Interface
+
+```typescript
+interface ShopComponent {
+  id: string;
+  type: string;
+  name: string;
+  description: string;
+  fullDescription: string;
+  icon: string;
+  cost: number;
+  tier: number;
+  upgradeTree: UpgradeTier[];
+  prerequisites: string[] | null;
+  category: ComponentCategory;
+  realWorldExample: string;
+  docLinks: DocLink[];
+}
+
+interface DocLink {
+  title: string;
+  url: string;
+}
+```
+
+### Extended Component Catalog
+
+The catalog will include these services (15+ total):
+
+| ID | Name | Category | Cost | Icon |
+|----|------|----------|------|------|
+| route53 | Route 53 | edge | 30 | Globe |
+| cloudfront | CloudFront CDN | edge | 60 | Globe |
+| alb | Application Load Balancer | load_balancer | 80 | GitBranch |
+| ec2 | EC2 Instance | compute | 50 | Server |
+| ecs | ECS Service | compute | 100 | Server |
+| lambda | Lambda Function | serverless | 40 | Zap |
+| s3 | S3 Bucket | storage | 30 | HardDrive |
+| rds | RDS Database | database | 100 | Database |
+| dynamodb | DynamoDB Table | database | 60 | Database |
+| elasticache | ElastiCache (Redis) | cache | 80 | Database |
+| sqs | SQS Queue | async | 40 | MessageSquare |
+| sns | SNS Topic | async | 35 | Bell |
+| eventbridge | EventBridge Bus | async | 50 | Workflow |
+| cognito | Cognito User Pool | auth | 70 | Users |
+| waf | WAF Web ACL | security | 90 | Shield |
+| cloudwatch | CloudWatch | observability | 45 | Activity |
+
+## Category-Based Connection Rules
+
+### Connection Rules Mapping
+
+```typescript
+// connectionRules.ts
+const CONNECTION_RULES: Record<ComponentCategory, ComponentCategory[]> = {
+  edge: ['edge', 'load_balancer', 'compute', 'serverless', 'storage'],
+  load_balancer: ['compute', 'serverless'],
+  compute: ['database', 'cache', 'storage', 'async', 'observability'],
+  serverless: ['database', 'cache', 'storage', 'async', 'observability'],
+  storage: ['async', 'observability'],
+  database: ['async', 'observability'],
+  cache: ['observability'],
+  async: ['serverless', 'compute', 'observability'],
+  auth: ['edge', 'load_balancer', 'serverless'],
+  security: ['edge', 'load_balancer'],
+  observability: [] // Cannot be source of connections
+};
+```
+
+### Connection Validation Helper
+
+```typescript
+/**
+ * Check if a connection between two components is valid
+ * based on their categories
+ */
+function isValidConnection(
+  fromComponent: ShopComponent,
+  toComponent: ShopComponent
+): { valid: boolean; message?: string } {
+  const fromCategory = fromComponent.category;
+  const toCategory = toComponent.category;
+  
+  // Observability cannot be a source
+  if (fromCategory === 'observability') {
+    return {
+      valid: false,
+      message: 'CloudWatch receives data but doesn\'t send to other services.'
+    };
+  }
+  
+  const allowedTargets = CONNECTION_RULES[fromCategory] || [];
+  
+  if (allowedTargets.includes(toCategory)) {
+    return { valid: true };
+  }
+  
+  return {
+    valid: false,
+    message: `This isn't a typical AWS pattern. ${getConnectionHint(fromCategory, toCategory)}`
+  };
+}
+
+function getConnectionHint(from: ComponentCategory, to: ComponentCategory): string {
+  // Provide helpful suggestions based on common patterns
+  const hints: Record<string, string> = {
+    'auth-database': 'Cognito protects entry points. Connect it to ALB or CloudFront instead.',
+    'database-compute': 'Data flows from compute to database, not the other way.',
+    'cache-database': 'Cache sits between compute and database.',
+  };
+  return hints[`${from}-${to}`] || 'Try connecting through a compute or serverless layer.';
+}
+```
+
+### Canvas Integration
+
+The InfrastructureCanvas component will call `isValidConnection()` when the user attempts to create a connection:
+
+```typescript
+// In handleConnectClick
+if (!connectFrom) {
+  setConnectFrom(placed);
+} else if (connectFrom.id !== placed.id) {
+  const fromData = getComponentById(connectFrom.type.toLowerCase());
+  const toData = getComponentById(placed.type.toLowerCase());
+  
+  const validation = isValidConnection(fromData, toData);
+  
+  if (validation.valid) {
+    actions.addConnection({ from: connectFrom.id, to: placed.id, type: 'network' });
+  } else {
+    // Show error message via Kiro or toast
+    actions.setKiroMessage({
+      text: validation.message,
+      timestamp: Date.now(),
+      duration: 4000
+    });
+  }
+  setConnectFrom(null);
+}
+```
+
+## Goal Advice / Blueprint Flow
+
+### Goal State
+
+```typescript
+interface GoalState {
+  goalText: string | null;
+  adviceText: string | null;
+  recommendedServiceTypes: string[];
+  timestamp: number | null;
+}
+```
+
+### Goal Input UI
+
+A small input field will be added to the Shop view header:
+
+```jsx
+<div className="goal-input-container">
+  <input 
+    type="text"
+    placeholder="What do you want to build? (e.g., 'static website')"
+    value={goalInput}
+    onChange={(e) => setGoalInput(e.target.value)}
+  />
+  <button onClick={handleSubmitGoal}>Get Recommendations</button>
+</div>
+```
+
+### Architect Agent Goal Prompt
+
+```typescript
+const GOAL_PROMPT_TEMPLATE = `
+You are a cloud architecture advisor. The user wants to build: "{goalText}"
+
+Available services in our shop:
+{serviceList}
+
+Respond with:
+1. A 1-2 sentence summary of the architecture
+2. A bullet list of recommended services, each line starting with "- " and containing:
+   - The service name (must match one from the list above)
+   - A brief rationale (1 line)
+
+Example format:
+Summary: A simple static site hosted on S3 and accelerated globally via CloudFront.
+Recommended services:
+- S3 Bucket – host the static HTML, CSS, and JS files.
+- CloudFront – cache and deliver the content globally with low latency.
+- Route 53 – map a custom domain to the CloudFront distribution.
+
+Keep it simple and educational. Do NOT use JSON format.
+`;
+```
+
+### Response Parsing (Best Effort)
+
+```typescript
+function parseGoalAdvice(responseText: string): {
+  summary: string;
+  recommendedServiceTypes: string[];
+} {
+  const lines = responseText.split('\n');
+  let summary = '';
+  const recommended: string[] = [];
+  
+  for (const line of lines) {
+    if (line.toLowerCase().startsWith('summary:')) {
+      summary = line.replace(/^summary:\s*/i, '').trim();
+    } else if (line.trim().startsWith('- ')) {
+      // Extract service name (first word or phrase before " – " or " - ")
+      const match = line.match(/^-\s*([^–-]+)/);
+      if (match) {
+        const serviceName = match[1].trim().toLowerCase();
+        // Map to component id
+        const componentId = mapServiceNameToId(serviceName);
+        if (componentId) {
+          recommended.push(componentId);
+        }
+      }
+    }
+  }
+  
+  return { summary, recommendedServiceTypes: recommended };
+}
+
+function mapServiceNameToId(name: string): string | null {
+  const mapping: Record<string, string> = {
+    's3': 's3', 's3 bucket': 's3',
+    'cloudfront': 'cloudfront', 'cloudfront cdn': 'cloudfront',
+    'route 53': 'route53', 'route53': 'route53',
+    'ec2': 'ec2', 'ec2 instance': 'ec2',
+    'lambda': 'lambda', 'lambda function': 'lambda',
+    'rds': 'rds', 'rds database': 'rds',
+    'dynamodb': 'dynamodb', 'dynamodb table': 'dynamodb',
+    'alb': 'alb', 'application load balancer': 'alb', 'load balancer': 'alb',
+    'ecs': 'ecs', 'ecs service': 'ecs',
+    'elasticache': 'elasticache', 'redis': 'elasticache',
+    'sqs': 'sqs', 'sqs queue': 'sqs',
+    'sns': 'sns', 'sns topic': 'sns',
+    'eventbridge': 'eventbridge', 'eventbridge bus': 'eventbridge',
+    'cognito': 'cognito', 'cognito user pool': 'cognito',
+    'waf': 'waf', 'waf web acl': 'waf',
+    'cloudwatch': 'cloudwatch',
+  };
+  return mapping[name.toLowerCase()] || null;
+}
+```
+
+### Shop Highlighting
+
+```jsx
+// In ComponentCard.jsx
+const isRecommended = goalState.recommendedServiceTypes.includes(component.id);
+
+<div className={`component-card ${isRecommended ? 'recommended' : ''}`}>
+  {isRecommended && <span className="badge">Recommended</span>}
+  {/* ... rest of card */}
+</div>
+```
+
+## Static Documentation Links
+
+### DocLinks Display in Modal
+
+```jsx
+// In component details modal
+{component.docLinks && component.docLinks.length > 0 && (
+  <div className="doc-links-section">
+    <h4>Learn More</h4>
+    <ul>
+      {component.docLinks.map((link, index) => (
+        <li key={index}>
+          <a href={link.url} target="_blank" rel="noopener noreferrer">
+            {link.title} ↗
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
+```
+
+### Example DocLinks for EC2
+
+```typescript
+{
+  id: 'ec2',
+  // ... other fields
+  docLinks: [
+    { title: 'EC2 Getting Started Guide', url: 'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html' },
+    { title: 'EC2 Instance Types', url: 'https://aws.amazon.com/ec2/instance-types/' },
+    { title: 'EC2 Best Practices', url: 'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-best-practices.html' }
+  ]
+}
+```
+
+## Welcome-Back Cooldown Design
+
+### Agent State Extension
+
+```typescript
+interface AgentState {
+  // Existing fields...
+  lastWelcomeBackTimestamp: number | null;
+  welcomeBackShownThisSession: boolean;
+}
+```
+
+### Cooldown Logic
+
+```typescript
+const WELCOME_BACK_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+
+function shouldShowWelcomeBack(agentState: AgentState): boolean {
+  // Already shown this session
+  if (agentState.welcomeBackShownThisSession) {
+    return false;
+  }
+  
+  // Check cooldown
+  const now = Date.now();
+  const lastWelcome = agentState.lastWelcomeBackTimestamp;
+  
+  if (lastWelcome && (now - lastWelcome) < WELCOME_BACK_COOLDOWN_MS) {
+    return false;
+  }
+  
+  return true;
+}
+
+function markWelcomeBackShown(actions: AppActions): void {
+  actions.setAgentState({
+    lastWelcomeBackTimestamp: Date.now(),
+    welcomeBackShownThisSession: true
+  });
+}
+```
+
+### Integration in useAgents Hook
+
+```typescript
+// In useFocusCoach hook
+const checkReEngagement = useCallback(() => {
+  if (!shouldShowWelcomeBack(agentState)) {
+    return; // Skip - cooldown active or already shown
+  }
+  
+  // Proceed with welcome-back logic...
+  markWelcomeBackShown(actions);
+  // Call agent...
+}, [agentState, actions]);
+```
+
+## Additional Correctness Properties
+
+### Property 31: Category-Based Connection Validation
+
+*For any* connection attempt between components A and B, the connection SHALL be allowed if and only if B's category is in the allowed targets list for A's category as defined in CONNECTION_RULES.
+
+**Validates: Requirements 17.1, 17.2, 17.3**
+
+### Property 32: Observability Sink-Only Behavior
+
+*For any* component with category 'observability', attempting to create a connection FROM that component SHALL be rejected.
+
+**Validates: Requirements 17.2**
+
+### Property 33: Goal Recommendation Highlighting
+
+*For any* goal advice response containing service names, components whose IDs match the parsed recommendedServiceTypes SHALL display a "Recommended" badge in the shop.
+
+**Validates: Requirements 19.6**
+
+### Property 34: Welcome-Back Cooldown Enforcement
+
+*For any* sequence of app opens within a 5-minute window, at most one welcome-back message SHALL be displayed.
+
+**Validates: Requirements 20.2, 20.3**
+
+### Property 35: DocLinks Presence
+
+*For any* component in the catalog, the docLinks array SHALL contain at least 2 entries with valid title and url fields.
+
+**Validates: Requirements 18.1**

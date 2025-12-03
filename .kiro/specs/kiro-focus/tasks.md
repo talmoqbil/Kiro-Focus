@@ -348,3 +348,135 @@
   - Test: State persists across page refresh
   - Test: Export/Import JSON still works
   - Ask the user if questions arise.
+
+
+- [ ] 21. Extend Component Catalog with Categories and DocLinks
+  - [ ] 21.1 Add ComponentCategory type and update ShopComponent interface
+    - Create `src/utils/connectionRules.js` with ComponentCategory type definition
+    - Update ShopComponent interface to include `category: ComponentCategory` and `docLinks: DocLink[]`
+    - _Requirements: 16.2, 16.3_
+  - [ ] 21.2 Extend components.js with new AWS services
+    - Add Route 53 (edge, cost: 30)
+    - Add ECS Service (compute, cost: 100)
+    - Add Lambda Function (serverless, cost: 40)
+    - Add DynamoDB Table (database, cost: 60)
+    - Add ElastiCache Redis (cache, cost: 80)
+    - Add SQS Queue (async, cost: 40)
+    - Add SNS Topic (async, cost: 35)
+    - Add EventBridge Bus (async, cost: 50)
+    - Add Cognito User Pool (auth, cost: 70)
+    - Add WAF Web ACL (security, cost: 90)
+    - _Requirements: 16.1_
+  - [ ] 21.3 Update existing components with categories and docLinks
+    - Update EC2 with category: 'compute' and 2-3 AWS doc links
+    - Update S3 with category: 'storage' and 2-3 AWS doc links
+    - Update RDS with category: 'database' and 2-3 AWS doc links
+    - Update CloudFront with category: 'edge' and 2-3 AWS doc links
+    - Update Load Balancer (ALB) with category: 'load_balancer' and 2-3 AWS doc links
+    - Update CloudWatch with category: 'observability' and 2-3 AWS doc links
+    - _Requirements: 16.2, 16.3, 18.1_
+  - [ ] 21.4 Add new icons to icon mapping
+    - Add icons for new services: Zap (Lambda), MessageSquare (SQS), Bell (SNS), Workflow (EventBridge), Users (Cognito), Shield (WAF), Activity (CloudWatch)
+    - Update ICON_MAP in ComponentShop.jsx and InfrastructureCanvas.jsx
+    - _Requirements: 16.1_
+
+- [ ] 22. Implement Category-Based Connection Validation
+  - [ ] 22.1 Create connectionRules.js module
+    - Define CONNECTION_RULES mapping: category → allowed target categories
+    - Implement `isValidConnection(fromComponent, toComponent)` function
+    - Implement `getConnectionHint(fromCategory, toCategory)` for helpful error messages
+    - _Requirements: 17.1, 17.2, 17.4_
+  - [ ] 22.2 Integrate connection validation into canvas
+    - Modify InfrastructureCanvas.jsx handleConnectClick to call isValidConnection
+    - Show error message via Kiro speech bubble when connection is invalid
+    - Allow valid connections to proceed as before
+    - _Requirements: 17.3_
+  - [ ]* 22.3 Write property tests for connection validation
+    - **Property 31: Category-Based Connection Validation**
+    - **Property 32: Observability Sink-Only Behavior**
+    - **Validates: Requirements 17.1, 17.2, 17.3**
+
+- [ ] 23. Implement Static Documentation Links Display
+  - [ ] 23.1 Update component details modal to show docLinks
+    - Add "Learn More" section to Modal in ComponentShop.jsx
+    - Render docLinks as clickable list with external link icons
+    - Open links in new tab with rel="noopener noreferrer"
+    - _Requirements: 18.2_
+  - [ ] 23.2 Update canvas component info modal to show docLinks
+    - Add "Learn More" section to component info modal in InfrastructureCanvas.jsx
+    - Same styling as shop modal
+    - _Requirements: 18.2_
+  - [ ]* 23.3 Write property test for docLinks presence
+    - **Property 35: DocLinks Presence**
+    - **Validates: Requirements 18.1**
+
+- [ ] 24. Implement Goal Prompt and Guided Recommendations
+  - [ ] 24.1 Add goal state to AppContext
+    - Add GoalState interface: { goalText, adviceText, recommendedServiceTypes, timestamp }
+    - Add SET_GOAL_ADVICE action to reducer
+    - Add setGoalAdvice action creator
+    - _Requirements: 19.4_
+  - [ ] 24.2 Create goal prompt UI in ComponentShop
+    - Add small text input field with placeholder "What do you want to build?"
+    - Add "Get Recommendations" button
+    - Display current goal advice text below input when available
+    - _Requirements: 19.1_
+  - [ ] 24.3 Create goal advice agent call
+    - Create GOAL_PROMPT_TEMPLATE in agentPrompts.js
+    - Implement callGoalAdviceAgent(goalText, availableServices) in architectAgent.js
+    - Parse response to extract summary and recommendedServiceTypes (best effort)
+    - _Requirements: 19.2, 19.3, 19.5, 19.8_
+  - [ ] 24.4 Highlight recommended services in shop
+    - Modify ComponentCard.jsx to accept isRecommended prop
+    - Display "Recommended" badge when component is in recommendedServiceTypes
+    - Style badge with subtle purple/green highlight
+    - _Requirements: 19.6_
+  - [ ] 24.5 Update Architect Agent to reference current goal
+    - Modify buildArchitectInput to include currentGoal if set
+    - Update ARCHITECT_AGENT_SYSTEM_PROMPT to optionally reference goal
+    - _Requirements: 19.7_
+  - [ ]* 24.6 Write property test for goal recommendation highlighting
+    - **Property 33: Goal Recommendation Highlighting**
+    - **Validates: Requirements 19.6**
+
+- [ ] 25. Implement Welcome-Back Message Cooldown
+  - [ ] 25.1 Add welcome-back tracking to agent state
+    - Add lastWelcomeBackTimestamp to AppContext state
+    - Add welcomeBackShownThisSession flag (resets on page load)
+    - Add SET_WELCOME_BACK_SHOWN action
+    - _Requirements: 20.1_
+  - [ ] 25.2 Implement cooldown logic in useFocusCoach hook
+    - Create shouldShowWelcomeBack(agentState) helper function
+    - Check: not shown this session AND 5+ minutes since last welcome-back
+    - Update checkReEngagement to respect cooldown
+    - Call markWelcomeBackShown after displaying message
+    - _Requirements: 20.2, 20.3, 20.4, 20.5_
+  - [ ]* 25.3 Write property test for welcome-back cooldown
+    - **Property 34: Welcome-Back Cooldown Enforcement**
+    - **Validates: Requirements 20.2, 20.3**
+
+- [ ] 26. Checkpoint - Extended Features
+  - Ensure all new features work correctly:
+  - Test: New services appear in shop with correct categories and costs
+  - Test: DocLinks display in component details modals
+  - Test: Invalid connections are blocked with helpful messages
+  - Test: Valid connections still work as before
+  - Test: Goal input produces recommendations and highlights services
+  - Test: Welcome-back message only shows once per session with 5-min cooldown
+  - Ask the user if questions arise.
+
+- [ ] 27. Regression Testing
+  - [ ] 27.1 Verify existing features still work
+    - Test timer start/pause/resume/complete flow
+    - Test credit calculation and display
+    - Test component purchase flow
+    - Test canvas drag-and-drop placement
+    - Test session history and statistics
+    - Test JSON export/import
+    - Test cloud auto-save
+    - _Requirements: All existing_
+  - [ ] 27.2 Build and deploy verification
+    - Run npm run build successfully
+    - Verify no console errors in production build
+    - Test on deployed Amplify environment
+    - _Requirements: 15.1, 15.2, 15.3_
