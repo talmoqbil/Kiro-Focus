@@ -1,5 +1,9 @@
-import { Server, Database, HardDrive, GitBranch, Globe, Lock, Check, Zap } from 'lucide-react';
+import { 
+  Server, Database, HardDrive, GitBranch, Globe, Lock, Check, Zap,
+  MessageSquare, Bell, Workflow, Users, Shield, Activity
+} from 'lucide-react';
 import { getPurchaseState, isComponentOwned } from '../utils/shopLogic';
+import { CATEGORY_DISPLAY_NAMES } from '../utils/connectionRules';
 
 /**
  * ComponentCard Component
@@ -7,7 +11,7 @@ import { getPurchaseState, isComponentOwned } from '../utils/shopLogic';
  * Displays a single infrastructure component in the shop.
  * Shows AWS icon, name, description, cost, and purchase state.
  * 
- * **Validates: Requirements 4.1, 4.2, 4.3, 4.4**
+ * **Validates: Requirements 4.1, 4.2, 4.3, 4.4, 16.1**
  */
 
 // Fallback icon mapping for component types (if AWS icon fails)
@@ -16,7 +20,14 @@ const ICON_MAP = {
   Database: Database,
   HardDrive: HardDrive,
   GitBranch: GitBranch,
-  Globe: Globe
+  Globe: Globe,
+  Zap: Zap,
+  MessageSquare: MessageSquare,
+  Bell: Bell,
+  Workflow: Workflow,
+  Users: Users,
+  Shield: Shield,
+  Activity: Activity
 };
 
 // AWS Icon component with fallback
@@ -109,7 +120,7 @@ export default function ComponentCard({
           <AwsIcon component={component} size={32} />
         </div>
         <span className="text-xs text-kiro-purple/60 bg-kiro-purple/10 px-2 py-1 rounded">
-          {component.category}
+          {CATEGORY_DISPLAY_NAMES[component.category] || component.category}
         </span>
       </div>
 

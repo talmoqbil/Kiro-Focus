@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { Server, Database, HardDrive, GitBranch, Globe, Zap, Lock, ExternalLink } from 'lucide-react';
+import { 
+  Server, Database, HardDrive, GitBranch, Globe, Zap, Lock, ExternalLink,
+  MessageSquare, Bell, Workflow, Users, Shield, Activity
+} from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { COMPONENTS_CATALOG, getComponentById } from '../data/components';
 import { canPurchase, processPurchase } from '../utils/shopLogic';
@@ -7,6 +10,7 @@ import ComponentCard from './ComponentCard';
 import Modal from './Modal';
 import { useArchitect } from '../hooks/useAgents';
 import { useCloudState } from '../App';
+import { CATEGORY_DISPLAY_NAMES } from '../utils/connectionRules';
 
 /**
  * ComponentShop Component
@@ -17,7 +21,7 @@ import { useCloudState } from '../App';
  * - "More Info" modal with full description and real-world example
  * - Purchase flow with credit deduction
  * 
- * **Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5, 4.6**
+ * **Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 16.1**
  */
 
 // Icon mapping for modal display
@@ -26,7 +30,14 @@ const ICON_MAP = {
   Database: Database,
   HardDrive: HardDrive,
   GitBranch: GitBranch,
-  Globe: Globe
+  Globe: Globe,
+  Zap: Zap,
+  MessageSquare: MessageSquare,
+  Bell: Bell,
+  Workflow: Workflow,
+  Users: Users,
+  Shield: Shield,
+  Activity: Activity
 };
 
 export default function ComponentShop() {
@@ -135,7 +146,7 @@ export default function ComponentShop() {
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs bg-kiro-purple/20 text-kiro-purple px-2 py-1 rounded">
-                    {selectedComponent.category}
+                    {CATEGORY_DISPLAY_NAMES[selectedComponent.category] || selectedComponent.category}
                   </span>
                   <span className="text-xs bg-kiro-bg text-gray-400 px-2 py-1 rounded">
                     Tier {selectedComponent.tier}
@@ -167,6 +178,33 @@ export default function ComponentShop() {
                 {selectedComponent.realWorldExample}
               </p>
             </div>
+
+            {/* Learn More - Documentation Links */}
+            {/* **Validates: Requirements 18.2** */}
+            {selectedComponent.docLinks && selectedComponent.docLinks.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-kiro-purple mb-2 flex items-center gap-2">
+                  <ExternalLink size={14} />
+                  Learn More
+                </h4>
+                <ul className="space-y-1">
+                  {selectedComponent.docLinks.map((link, index) => (
+                    <li key={index}>
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-gray-400 hover:text-kiro-purple transition-colors 
+                                 flex items-center gap-2 group"
+                      >
+                        <ExternalLink size={12} className="text-gray-500 group-hover:text-kiro-purple" />
+                        {link.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Prerequisites */}
             {selectedComponent.prerequisites && selectedComponent.prerequisites.length > 0 && (

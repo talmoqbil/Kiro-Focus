@@ -350,12 +350,12 @@
   - Ask the user if questions arise.
 
 
-- [ ] 21. Extend Component Catalog with Categories and DocLinks
-  - [ ] 21.1 Add ComponentCategory type and update ShopComponent interface
+- [x] 21. Extend Component Catalog with Categories and DocLinks
+  - [x] 21.1 Add ComponentCategory type and update ShopComponent interface
     - Create `src/utils/connectionRules.js` with ComponentCategory type definition
     - Update ShopComponent interface to include `category: ComponentCategory` and `docLinks: DocLink[]`
     - _Requirements: 16.2, 16.3_
-  - [ ] 21.2 Extend components.js with new AWS services
+  - [x] 21.2 Extend components.js with new AWS services
     - Add Route 53 (edge, cost: 30)
     - Add ECS Service (compute, cost: 100)
     - Add Lambda Function (serverless, cost: 40)
@@ -367,7 +367,7 @@
     - Add Cognito User Pool (auth, cost: 70)
     - Add WAF Web ACL (security, cost: 90)
     - _Requirements: 16.1_
-  - [ ] 21.3 Update existing components with categories and docLinks
+  - [x] 21.3 Update existing components with categories and docLinks
     - Update EC2 with category: 'compute' and 2-3 AWS doc links
     - Update S3 with category: 'storage' and 2-3 AWS doc links
     - Update RDS with category: 'database' and 2-3 AWS doc links
@@ -375,18 +375,18 @@
     - Update Load Balancer (ALB) with category: 'load_balancer' and 2-3 AWS doc links
     - Update CloudWatch with category: 'observability' and 2-3 AWS doc links
     - _Requirements: 16.2, 16.3, 18.1_
-  - [ ] 21.4 Add new icons to icon mapping
+  - [x] 21.4 Add new icons to icon mapping
     - Add icons for new services: Zap (Lambda), MessageSquare (SQS), Bell (SNS), Workflow (EventBridge), Users (Cognito), Shield (WAF), Activity (CloudWatch)
     - Update ICON_MAP in ComponentShop.jsx and InfrastructureCanvas.jsx
     - _Requirements: 16.1_
 
-- [ ] 22. Implement Category-Based Connection Validation
-  - [ ] 22.1 Create connectionRules.js module
+- [x] 22. Implement Category-Based Connection Validation
+  - [x] 22.1 Create connectionRules.js module
     - Define CONNECTION_RULES mapping: category → allowed target categories
     - Implement `isValidConnection(fromComponent, toComponent)` function
     - Implement `getConnectionHint(fromCategory, toCategory)` for helpful error messages
     - _Requirements: 17.1, 17.2, 17.4_
-  - [ ] 22.2 Integrate connection validation into canvas
+  - [x] 22.2 Integrate connection validation into canvas
     - Modify InfrastructureCanvas.jsx handleConnectClick to call isValidConnection
     - Show error message via Kiro speech bubble when connection is invalid
     - Allow valid connections to proceed as before
@@ -396,13 +396,13 @@
     - **Property 32: Observability Sink-Only Behavior**
     - **Validates: Requirements 17.1, 17.2, 17.3**
 
-- [ ] 23. Implement Static Documentation Links Display
-  - [ ] 23.1 Update component details modal to show docLinks
+- [x] 23. Implement Static Documentation Links Display
+  - [x] 23.1 Update component details modal to show docLinks
     - Add "Learn More" section to Modal in ComponentShop.jsx
     - Render docLinks as clickable list with external link icons
     - Open links in new tab with rel="noopener noreferrer"
     - _Requirements: 18.2_
-  - [ ] 23.2 Update canvas component info modal to show docLinks
+  - [x] 23.2 Update canvas component info modal to show docLinks
     - Add "Learn More" section to component info modal in InfrastructureCanvas.jsx
     - Same styling as shop modal
     - _Requirements: 18.2_

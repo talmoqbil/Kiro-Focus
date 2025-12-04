@@ -1,5 +1,8 @@
 import { useState, useRef } from 'react';
-import { Server, Database, HardDrive, GitBranch, Globe, Trash2, Plus, ArrowUp, Zap, Link2, X } from 'lucide-react';
+import { 
+  Server, Database, HardDrive, GitBranch, Globe, Trash2, Plus, ArrowUp, Zap, Link2, X,
+  MessageSquare, Bell, Workflow, Users, Shield, Activity, ExternalLink
+} from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { getComponentById } from '../data/components';
 import { useArchitect } from '../hooks/useAgents';
@@ -13,6 +16,7 @@ import {
   findAvailablePosition,
   isCanvasEmpty
 } from '../utils/canvasLogic';
+import { isValidConnection, getConnectionHint } from '../utils/connectionRules';
 import Modal from './Modal';
 import { useCloudState } from '../App';
 
@@ -28,7 +32,7 @@ import { useCloudState } from '../App';
  * - Component click for info modal (remove option)
  * - Empty state message
  * 
- * **Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5, 5.6**
+ * **Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 16.1**
  */
 
 // Icon mapping
@@ -37,7 +41,14 @@ const ICON_MAP = {
   Database: Database,
   HardDrive: HardDrive,
   GitBranch: GitBranch,
-  Globe: Globe
+  Globe: Globe,
+  Zap: Zap,
+  MessageSquare: MessageSquare,
+  Bell: Bell,
+  Workflow: Workflow,
+  Users: Users,
+  Shield: Shield,
+  Activity: Activity
 };
 
 export default function InfrastructureCanvas() {
@@ -272,6 +283,7 @@ export default function InfrastructureCanvas() {
   };
 
   // Handle component click in connect mode
+  // **Validates: Requirements 17.1, 17.2, 17.3**
   const handleConnectClick = (placed) => {
     if (!connectMode) return;
     
@@ -279,19 +291,58 @@ export default function InfrastructureCanvas() {
       // First component selected
       setConnectFrom(placed);
     } else if (connectFrom.id !== placed.id) {
-      // Second component selected - create connection
+      // Second component selected - validate and create connection
       const connectionExists = architecture.connections.some(
         conn => (conn.from === connectFrom.id && conn.to === placed.id) ||
                 (conn.from === placed.id && conn.to === connectFrom.id)
       );
       
-      if (!connectionExists) {
-        actions.addConnection({
-          from: connectFrom.id,
-          to: placed.id,
-          type: 'network'
+      if (connectionExists) {
+        // Connection already exists
+        actions.setKiroMessage({
+          text: "These components are already connected!",
+          timestamp: Date.now(),
+          duration: 4000
         });
+        setConnectFrom(null);
+        return;
       }
+      
+      // Get component data for validation
+      const fromComponentData = getComponentById(connectFrom.type.toLowerCase());
+      const toComponentData = getComponentById(placed.type.toLowerCase());
+      
+      // Validate connection using category-based rules
+      if (!isValidConnection(fromComponentData, toComponentData)) {
+        // Invalid connection - show error via Kiro
+        const hint = getConnectionHint(
+          fromComponentData?.category, 
+          toComponentData?.category
+        );
+        actions.setKiroEmotion('teaching');
+        actions.setKiroMessage({
+          text: hint,
+          timestamp: Date.now(),
+          duration: 6000
+        });
+        setConnectFrom(null);
+        return;
+      }
+      
+      // Valid connection - create it
+      actions.addConnection({
+        from: connectFrom.id,
+        to: placed.id,
+        type: 'network'
+      });
+      
+      // Show success message via Kiro
+      actions.setKiroEmotion('celebrating');
+      actions.setKiroMessage({
+        text: `Great connection! ${fromComponentData?.name || connectFrom.type} → ${toComponentData?.name || placed.type}`,
+        timestamp: Date.now(),
+        duration: 3000
+      });
       
       // Reset connection state
       setConnectFrom(null);
@@ -674,6 +725,33 @@ export default function InfrastructureCanvas() {
                   ))}
                 </div>
               </div>
+
+              {/* Learn More - Documentation Links */}
+              {/* **Validates: Requirements 18.2** */}
+              {selectedComponent.data.docLinks && selectedComponent.data.docLinks.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-semibold text-kiro-purple mb-2 flex items-center gap-1">
+                    <ExternalLink size={12} />
+                    Learn More
+                  </h4>
+                  <ul className="space-y-1">
+                    {selectedComponent.data.docLinks.map((link, index) => (
+                      <li key={index}>
+                        <a
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-gray-400 hover:text-kiro-purple transition-colors 
+                                   flex items-center gap-1 group"
+                        >
+                          <ExternalLink size={10} className="text-gray-500 group-hover:text-kiro-purple" />
+                          {link.title}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Actions */}
               <div className="flex gap-2 pt-2 border-t border-gray-700">
