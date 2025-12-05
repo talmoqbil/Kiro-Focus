@@ -7,7 +7,7 @@
         "dynamodb:GetItem",
         "dynamodb:PutItem"
       ],
-      "Resource": "arn:aws:dynamodb:us-east-1:699222026265:table/KiroFocusUserState"
+      "Resource": "arn:aws:dynamodb:us-east-1:699222026265:table/NimbusUserState"
     },
     {
       "Effect": "Allow",

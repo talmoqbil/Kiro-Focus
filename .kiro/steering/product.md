@@ -1,6 +1,6 @@
-# Kiro Focus - Product Overview
+# Nimbus - Product Overview
 
-Kiro Focus is a gamified focus timer application that rewards users with "Cloud Credits" for completing timed focus sessions. Users spend credits to purchase AWS-style cloud infrastructure components and arrange them on a visual canvas.
+Nimbus is a gamified focus timer application that rewards users with "Cloud Credits" for completing timed focus sessions. Users spend credits to purchase AWS-style cloud infrastructure components and arrange them on a visual canvas.
 
 ## Core Features
 

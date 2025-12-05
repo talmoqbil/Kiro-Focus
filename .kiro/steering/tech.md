@@ -47,6 +47,6 @@ npm run lint     # ESLint check
 ## Testing Conventions
 
 - Test files in `src/__tests__/` directory
-- Property-based tests annotated with: `// **Feature: kiro-focus, Property {number}: {description}**`
+- Property-based tests annotated with: `// **Feature: nimbus, Property {number}: {description}**`
 - Use fast-check for property-based testing
 - Vitest globals enabled (`globals: true`)

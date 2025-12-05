@@ -1,8 +1,8 @@
-# Kiro Focus: Development Workflow Documentation
+# Nimbus: Development Workflow Documentation
 
 ## Executive Summary
 
-Kiro Focus was built using a **spec-driven development** approach, leveraging Kiro IDE's unique features to transform a rough idea into a polished, educational application. This document details the strategic decisions, workflows, and outcomes that demonstrate advanced Kiro IDE usage.
+Nimbus was built using a **spec-driven development** approach, leveraging Kiro IDE's unique features to transform a rough idea into a polished, educational application. This document details the strategic decisions, workflows, and outcomes that demonstrate advanced Kiro IDE usage.
 
 **Key Outcomes**:
 - 40+ requirements systematically tracked
@@ -24,7 +24,7 @@ Rough Idea → Requirements → Design → Tasks → Implementation
 
 ### Spec Structure
 
-**Location**: `.kiro/specs/kiro-focus/`
+**Location**: `.kiro/specs/nimbus/`
 
 | Document | Purpose | Size |
 |----------|---------|------|
@@ -113,9 +113,9 @@ Tasks are granular, actionable, and traceable:
 ### product.md - The "Why"
 
 ```markdown
-# Kiro Focus - Product Overview
+# Nimbus - Product Overview
 
-Kiro Focus is a gamified focus timer that rewards users with "Cloud Credits"
+Nimbus is a gamified focus timer that rewards users with "Cloud Credits"
 for completing timed focus sessions. Users spend credits to purchase 
 AWS-style cloud infrastructure components...
 
@@ -132,7 +132,7 @@ AWS-style cloud infrastructure components...
 ```markdown
 # Project Structure
 
-kiro-focus/
+nimbus/
 ├── src/
 │   ├── components/     # Reusable UI components
 │   ├── context/        # Global state (AppContext.jsx)
@@ -393,7 +393,7 @@ Generated:
 
 ## Conclusion
 
-The development of Kiro Focus demonstrates that Kiro IDE's features aren't just conveniences—they're force multipliers for building quality software:
+The development of Nimbus demonstrates that Kiro IDE's features aren't just conveniences—they're force multipliers for building quality software:
 
 1. **Spec-driven development** eliminated scope creep and ensured completeness
 2. **Steering documents** maintained consistency across 4,500+ lines of code

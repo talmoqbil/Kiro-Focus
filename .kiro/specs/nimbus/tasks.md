@@ -1,0 +1,482 @@
+# Implementation Plan
+
+- [x] 1. Set up project structure and dependencies
+  - [x] 1.1 Initialize React project with Vite and install dependencies
+    - Create React app with Vite
+    - Install dependencies: lucide-react, fast-check (for testing), tailwindcss
+    - Configure Tailwind with dark theme color palette
+    - _Requirements: 9.1, 9.2, 9.3, 9.4_
+  - [x] 1.2 Create directory structure and base files
+    - Create folders: components/, agents/, utils/, data/, hooks/, __tests__/
+    - Set up AppContext for global state management
+    - Create App.jsx with basic layout structure
+    - _Requirements: All_
+
+- [x] 2. Implement credit calculation utilities
+  - [x] 2.1 Create creditCalculator.js with all credit formulas
+    - Implement calculateBaseCredits(duration)
+    - Implement calculateCompletionBonus(baseCredits, pauseCount)
+    - Implement calculateStreakBonus(baseCredits, streak)
+    - Implement calculateLongSessionBonus(baseCredits, duration)
+    - Implement calculatePartialCredits(elapsedTime)
+    - Implement calculateTotalCredits(session, streak)
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+  - [ ]* 2.2 Write property tests for credit calculations
+    - **Property 7: Base Credit Calculation**
+    - **Property 8: Completion Bonus Calculation**
+    - **Property 9: Streak Bonus Calculation**
+    - **Property 10: Long Session Bonus Calculation**
+    - **Property 5: Partial Credit Calculation for Abandonment**
+    - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5, 1.6**
+
+- [x] 3. Implement timer logic and component
+  - [x] 3.1 Create timerLogic.js with timer state management
+    - Implement startTimer(duration) returning initial state with startTime timestamp
+    - Implement pauseTimer(state) returning paused state
+    - Implement resumeTimer(state) returning resumed state
+    - Implement tickTimer(state) with drift correction (compare to startTime)
+    - Implement calculateProgress(state) returning percentage
+    - Implement isFinalMinute(state) returning boolean
+    - Implement correctDrift(state) to fix >2s drift using timestamps
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.7, 12.1, 12.2, 12.3_
+  - [ ]* 3.2 Write property tests for timer logic
+    - **Property 1: Timer Countdown Accuracy**
+    - **Property 2: Progress Ring Calculation**
+    - **Property 3: Pause and Resume Consistency**
+    - **Property 4: Session Completion Detection**
+    - **Property 6: Final Minute Detection**
+    - **Property 23: Timer Accuracy Under Throttling**
+    - **Validates: Requirements 1.1, 1.2, 1.3, 1.4, 1.5, 1.7, 12.1, 12.2, 12.3**
+  - [x] 3.3 Create Timer.jsx component
+    - Implement duration preset buttons (15, 25, 45, 60, 90 min)
+    - Implement countdown display in MM:SS format
+    - Implement circular progress ring SVG
+    - Implement start/pause/resume/stop controls
+    - Apply final minute styling (orange, pulse)
+    - Implement useEffect cleanup to clear intervals on unmount
+    - Wire up to AppContext for state and credit awarding
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 12.4_
+
+- [x] 4. Implement Kiro mascot component
+  - [x] 4.1 Create kiroLogic.js for emotion state management
+    - Implement getEmotionForEvent(event) mapping events to emotions
+    - Get the Kiro mascot image from online or ask the user to do this manual
+    - Implement message queue management (enqueue, dequeue, peek)
+    - _Requirements: 3.2, 3.3, 3.4, 3.5, 3.7_
+  - [ ]* 4.2 Write property tests for Kiro logic
+    - **Property 11: Kiro Emotion State Transitions**
+    - **Property 12: Message Queue Ordering**
+    - **Validates: Requirements 3.2, 3.3, 3.4, 3.5, 3.7**
+  - [x] 4.3 Create KiroMascot.jsx component
+    - Implement ghost SVG/CSS with semi-transparent body and purple glow
+    - Implement 5 emotion animations (idle, encouraging, celebrating, concerned, teaching)
+    - Implement speech bubble with typewriter effect (30ms per character)
+    - Implement message queue display logic with auto-dismiss
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7_
+
+- [x] 5. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 6. Implement component shop
+  - [x] 6.1 Create components.js data file with component catalog
+    - Define all 5 components (EC2, S3, RDS, LoadBalancer, CloudFront)
+    - Include all fields: id, type, name, descriptions, icon, cost, tier (always 1 for Phase 1), prerequisites, category, realWorldExample
+    - Note: upgradeTree included in data but upgrade UI deferred to Phase 2
+    - _Requirements: 4.1_
+  - [x] 6.2 Create shopLogic.js with purchase logic
+    - Implement canPurchase(component, credits, ownedComponents)
+    - Implement checkPrerequisites(component, ownedComponents)
+    - Implement processPurchase(component, credits, ownedComponents)
+    - _Requirements: 4.2, 4.3, 4.4, 4.5_
+  - [ ]* 6.3 Write property tests for shop logic
+    - **Property 13: Purchase Availability Based on Credits**
+    - **Property 14: Prerequisite Checking**
+    - **Property 15: Purchase Transaction Integrity**
+    - **Validates: Requirements 4.2, 4.3, 4.4, 4.5**
+  - [x] 6.4 Create Modal.jsx reusable component
+    - Generic modal wrapper with overlay and close button
+    - Content slot for flexible usage
+    - Escape key to close
+    - Centralized z-index management
+    - _Requirements: 4.6, 5.5_
+  - [x] 6.5 Create ComponentCard.jsx component
+    - Display component icon, name, description, cost
+    - Implement available/insufficient/locked visual states
+    - Implement purchase button with appropriate styling
+    - _Requirements: 4.1, 4.2, 4.3, 4.4_
+  - [x] 6.6 Create ComponentShop.jsx component
+    - Display grid of ComponentCards
+    - Implement "More Info" modal with full description and real-world example
+    - Wire up purchase flow to AppContext
+    - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6_
+
+- [x] 7. Implement infrastructure canvas
+  - [x] 7.1 Create canvasLogic.js with grid and placement logic
+    - Implement snapToGrid(position) returning snapped coordinates
+    - Implement isValidPlacement(position, placedComponents)
+    - Implement generateComponentId(type, placedComponents)
+    - Note: Connections between components deferred to Phase 2
+    - _Requirements: 5.2, 5.3_
+  - [ ]* 7.2 Write property tests for canvas logic
+    - **Property 16: Grid Snap Calculation**
+    - **Property 17: Empty State Detection**
+    - **Validates: Requirements 5.2, 5.3, 5.6**
+  - [x] 7.3 Create InfrastructureCanvas.jsx component
+    - Implement 800x600 canvas with 40x40 grid background
+    - Implement drag-and-drop with ghost preview
+    - Implement snap-to-grid placement
+    - Implement component hover highlighting and tooltips
+    - Implement component click for info modal (remove option only, upgrades Phase 2)
+    - Implement empty state message
+    - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
+
+- [x] 8. Implement session history and statistics
+  - [x] 8.1 Create sessionHistory.js with history logic
+    - Implement groupSessionsByDate(sessions)
+    - Implement calculateStatistics(sessions)
+    - Implement calculateStreak(sessions)
+    - _Requirements: 6.1, 6.2, 6.3_
+  - [ ]* 8.2 Write property tests for session history logic
+    - **Property 18: Session Grouping by Date**
+    - **Property 19: Session Display Completeness**
+    - **Property 20: Statistics Calculation**
+    - **Validates: Requirements 6.1, 6.2, 6.3**
+  - [x] 8.3 Create SessionHistory.jsx component
+    - Display sessions grouped by date with completion icons
+    - Display summary statistics panel
+    - Implement export button triggering JSON download
+    - Implement import button with file picker
+    - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
+
+- [x] 9. Implement export/import functionality
+  - [x] 9.1 Create storageHelpers.js with export/import logic
+    - Define CURRENT_VERSION constant ("1.0.0")
+    - Implement exportData(userProgress, architecture) returning JSON string with version
+    - Implement validateImportData(jsonString) with version checking
+    - Implement importData(jsonString) returning parsed state or error
+    - Reject imports with version mismatch
+    - _Requirements: 10.2, 10.3, 10.4, 10.5, 10.6_
+  - [ ]* 9.2 Write property tests for export/import
+    - **Property 21: Export/Import Round-Trip**
+    - **Property 24: Export Version Validation**
+    - **Validates: Requirements 6.4, 6.5, 10.2, 10.3, 10.4, 10.5, 10.6**
+
+- [x] 10. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 11. Implement AI agent system
+  - [x] 11.1 Create agentPrompts.js with system prompts
+    - Define FOCUS_COACH_SYSTEM_PROMPT constant
+    - Define ARCHITECT_AGENT_SYSTEM_PROMPT constant
+    - _Requirements: 7.1, 8.1_
+  - [x] 11.2 Create kiroDialogue.js with fallback messages
+    - Define fallback messages for each agent mode (encouragement, analysis, motivation, supportive)
+    - Define fallback architect explanations for each component type
+    - Define generic error recovery messages
+    - _Requirements: 11.1, 11.3_
+  - [x] 11.3 Create agentApiClient.js with API wrapper
+    - Implement callAgentAPI(prompt, maxTokens) with 5s timeout
+    - Implement retry logic (1 retry on timeout)
+    - Implement rate limiter (max 5 messages/hour)
+    - Implement error logging and fallback triggering
+    - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5_
+  - [x] 11.4 Create focusCoachAgent.js
+    - Implement buildFocusCoachInput(mode, sessionData)
+    - Implement callFocusCoachAgent(input) using agentApiClient
+    - Implement parseFocusCoachResponse(response) with defaults for missing fields
+    - Wire fallback messages from kiroDialogue.js on error
+    - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 11.4_
+  - [x] 11.5 Create architectAgent.js
+    - Implement buildArchitectInput(components, credits, lastAction)
+    - Implement callArchitectAgent(input) using agentApiClient
+    - Implement parseArchitectResponse(response) with defaults for missing fields
+    - Wire fallback messages from kiroDialogue.js on error
+    - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 11.4_
+  - [x] 11.6 Create useAgents.js custom hook
+    - Implement useFocusCoach() hook with session event handlers
+    - Implement useArchitect() hook with purchase event handlers
+    - Implement re-engagement detection (daysSinceLastSession >= 1)
+    - Wire agent responses to Kiro message display
+    - _Requirements: 7.1, 7.2, 7.3, 7.4, 8.1, 8.3, 8.4_
+  - [ ]* 11.7 Write property tests for agent system
+    - **Property 22: Re-engagement Detection**
+    - **Property 25: Agent Rate Limiting**
+    - **Validates: Requirements 7.4, 11.5**
+  - [ ]* 11.8 Write unit tests for agent integration
+    - Test: Agent API call constructs correct request body
+    - Test: Agent response parsing handles all JSON fields
+    - Test: Agent fallback messages display on timeout
+    - Test: Agent messages trigger correct Kiro emotions
+    - _Requirements: 11.1, 11.2, 11.3, 11.4_
+
+- [x] 12. Implement credit display component
+  - [x] 12.1 Create CreditDisplay.jsx component
+    - Display current credits with lightning bolt icon
+    - Implement animated counter (incremental counting, not instant)
+    - Implement scale-up animation on change
+    - Implement green flash for gains, red flash for spending
+    - Implement low credits warning state (< 50 credits)
+    - _Requirements: 2.6_
+
+- [x] 13. Wire up complete application flow
+  - [x] 13.1 Integrate all components in App.jsx
+    - Set up navigation between views (timer, shop, canvas, history)
+    - Wire Timer completion to credit awarding and Focus Coach
+    - Wire Shop purchase to Architect Agent
+    - Wire Canvas view to Architect validation
+    - Ensure Kiro mascot receives all agent messages
+    - _Requirements: All_
+  - [x] 13.2 Apply consistent dark theme styling
+    - Apply background color #0a0e27 to all views
+    - Apply purple accent #b794f6 to interactive elements
+    - Apply success green #48bb78 and warning orange #ed8936
+    - Apply purple glow to Kiro mascot
+    - Ensure smooth 60fps animations
+    - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6_
+
+- [x] 14. Final Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [-] 15. (OPTIONAL) Phase 2 Stretch Goals
+  - [x] 15.1 Implement component upgrade system
+    - Add "Upgrade" button to placed component info modal
+    - Implement upgrade cost deduction and tier increment
+    - Trigger Architect Agent explanation of tier benefits
+    - _Requirements: 4.6 (extended)_
+  - [x] 15.2 Implement connection system
+    - Add "Connect Mode" button to canvas
+    - Click component A, then component B to create connection
+    - Draw dashed line between components with animated data flow
+    - Store connections in architecture state
+    - _Requirements: 5.4 (extended)_
+  - [x] 15.3 Implement MCP integration for session persistence
+    - Set up filesystem MCP for session log file
+    - Auto-save sessions to local file on completion
+    - Auto-load sessions on app start
+    - _Requirements: 10.2 (extended)_
+
+- [x] 16. Implement Anonymous Cloud Auto-Save
+  - [x] 16.1 Create user ID management utility
+    - Create `src/utils/userId.js` with `getOrCreateUserId()` function
+    - Use `crypto.randomUUID()` to generate unique ID on first load
+    - Store ID in localStorage with key `'nimbus-user-id'`
+    - Return existing ID on subsequent visits
+    - _Requirements: 13.1, 13.2_
+  - [x] 16.2 Create cloud state builder and applier utilities
+    - Create `src/utils/cloudState.js` with `buildCloudState(state)` function
+    - Extract: credits, currentStreak, lastSessionDate, ownedComponents, placedComponents, connections, sessionHistory (limit 100)
+    - Create `applyCloudState(cloudState, actions)` function to restore state
+    - _Requirements: 13.5_
+  - [x] 16.3 Create cloud API client
+    - Create `src/api/cloudState.js` with API functions
+    - Implement `loadStateFromCloud(userId)` - GET request to /state?userId=xxx
+    - Implement `saveStateToCloud(userId, state)` - PUT request to /state
+    - Use `import.meta.env.VITE_API_BASE_URL` for API endpoint
+    - Handle errors gracefully (return null/false, don't throw)
+    - _Requirements: 13.3, 13.10, 13.11_
+  - [ ]* 16.4 Write property tests for cloud state utilities
+    - **Property 26: Anonymous User ID Persistence**
+    - **Property 27: Cloud State Round-Trip**
+    - **Property 28: Session History Limit**
+    - **Validates: Requirements 13.1, 13.2, 13.5**
+
+- [x] 17. Integrate cloud auto-save into application
+  - [x] 17.1 Add cloud state loading on app startup
+    - Modify `App.jsx` to load cloud state on mount
+    - Add loading state to show subtle indicator while loading
+    - Call `applyCloudState()` if state exists
+    - Start with defaults if load fails (graceful degradation)
+    - _Requirements: 13.3, 13.4, 13.11_
+  - [x] 17.2 Add auto-save triggers for session events
+    - Modify Timer.jsx to trigger cloud save after session completion
+    - Modify Timer.jsx to trigger cloud save after session abandonment
+    - _Requirements: 13.6_
+  - [x] 17.3 Add auto-save triggers for shop events
+    - Modify ComponentShop.jsx to trigger cloud save after purchase
+    - _Requirements: 13.7_
+  - [x] 17.4 Add auto-save triggers for canvas events
+    - Modify InfrastructureCanvas.jsx to trigger cloud save after component placement
+    - Modify InfrastructureCanvas.jsx to trigger cloud save after component removal
+    - Modify InfrastructureCanvas.jsx to trigger cloud save after component upgrade
+    - _Requirements: 13.8_
+  - [x] 17.5 Add auto-save trigger for JSON import
+    - Modify SessionHistory.jsx to trigger cloud save after successful import
+    - _Requirements: 13.9_
+  - [ ]* 17.6 Write property tests for auto-save triggers
+    - **Property 29: Cloud Save Trigger Events**
+    - **Property 30: Graceful Degradation on Cloud Failure**
+    - **Validates: Requirements 13.6, 13.7, 13.8, 13.9, 13.10**
+
+- [x] 18. Create AWS backend infrastructure
+  - [x] 18.1 Create DynamoDB table configuration
+    - Create `backend/dynamodb-table.json` with table definition
+    - Table name: NimbusUserState
+    - Partition key: userId (String)
+    - Billing mode: PAY_PER_REQUEST
+    - _Requirements: 14.5_
+  - [x] 18.2 Create Load State Lambda function
+    - Create `backend/loadState/index.js` Lambda handler
+    - Handle GET requests with userId query parameter
+    - Return stored state or null for new users
+    - Include CORS headers in response
+    - Handle OPTIONS preflight requests
+    - _Requirements: 14.1, 14.3, 14.4_
+  - [x] 18.3 Create Save State Lambda function
+    - Create `backend/saveState/index.js` Lambda handler
+    - Handle PUT requests with userId and state in body
+    - Save state to DynamoDB with updatedAt timestamp
+    - Include CORS headers in response
+    - Handle OPTIONS preflight requests
+    - _Requirements: 14.2, 14.3, 14.4, 14.5_
+
+- [x] 19. Create Amplify deployment configuration
+  - [x] 19.1 Create amplify.yml build configuration
+    - Create `amplify.yml` in project root
+    - Configure preBuild: cd nimbus && npm ci
+    - Configure build: npm run build
+    - Set artifacts baseDirectory: nimbus/dist
+    - Configure node_modules caching
+    - _Requirements: 15.1, 15.3_
+  - [x] 19.2 Update .env.example with API URL placeholder
+    - Add VITE_API_BASE_URL to .env.example
+    - Document that this should be set in Amplify Console
+    - _Requirements: 15.2_
+
+- [x] 20. Final Checkpoint - Cloud Auto-Save
+  - Ensure all cloud auto-save functionality works end-to-end
+  - Test: New user gets anonymous ID
+  - Test: State persists across page refresh
+  - Test: Export/Import JSON still works
+  - Ask the user if questions arise.
+
+
+- [x] 21. Extend Component Catalog with Categories and DocLinks
+  - [x] 21.1 Add ComponentCategory type and update ShopComponent interface
+    - Create `src/utils/connectionRules.js` with ComponentCategory type definition
+    - Update ShopComponent interface to include `category: ComponentCategory` and `docLinks: DocLink[]`
+    - _Requirements: 16.2, 16.3_
+  - [x] 21.2 Extend components.js with new AWS services
+    - Add Route 53 (edge, cost: 30)
+    - Add ECS Service (compute, cost: 100)
+    - Add Lambda Function (serverless, cost: 40)
+    - Add DynamoDB Table (database, cost: 60)
+    - Add ElastiCache Redis (cache, cost: 80)
+    - Add SQS Queue (async, cost: 40)
+    - Add SNS Topic (async, cost: 35)
+    - Add EventBridge Bus (async, cost: 50)
+    - Add Cognito User Pool (auth, cost: 70)
+    - Add WAF Web ACL (security, cost: 90)
+    - _Requirements: 16.1_
+  - [x] 21.3 Update existing components with categories and docLinks
+    - Update EC2 with category: 'compute' and 2-3 AWS doc links
+    - Update S3 with category: 'storage' and 2-3 AWS doc links
+    - Update RDS with category: 'database' and 2-3 AWS doc links
+    - Update CloudFront with category: 'edge' and 2-3 AWS doc links
+    - Update Load Balancer (ALB) with category: 'load_balancer' and 2-3 AWS doc links
+    - Update CloudWatch with category: 'observability' and 2-3 AWS doc links
+    - _Requirements: 16.2, 16.3, 18.1_
+  - [x] 21.4 Add new icons to icon mapping
+    - Add icons for new services: Zap (Lambda), MessageSquare (SQS), Bell (SNS), Workflow (EventBridge), Users (Cognito), Shield (WAF), Activity (CloudWatch)
+    - Update ICON_MAP in ComponentShop.jsx and InfrastructureCanvas.jsx
+    - _Requirements: 16.1_
+
+- [x] 22. Implement Category-Based Connection Validation
+  - [x] 22.1 Create connectionRules.js module
+    - Define CONNECTION_RULES mapping: category → allowed target categories
+    - Implement `isValidConnection(fromComponent, toComponent)` function
+    - Implement `getConnectionHint(fromCategory, toCategory)` for helpful error messages
+    - _Requirements: 17.1, 17.2, 17.4_
+  - [x] 22.2 Integrate connection validation into canvas
+    - Modify InfrastructureCanvas.jsx handleConnectClick to call isValidConnection
+    - Show error message via Kiro speech bubble when connection is invalid
+    - Allow valid connections to proceed as before
+    - _Requirements: 17.3_
+  - [ ]* 22.3 Write property tests for connection validation
+    - **Property 31: Category-Based Connection Validation**
+    - **Property 32: Observability Sink-Only Behavior**
+    - **Validates: Requirements 17.1, 17.2, 17.3**
+
+- [x] 23. Implement Static Documentation Links Display
+  - [x] 23.1 Update component details modal to show docLinks
+    - Add "Learn More" section to Modal in ComponentShop.jsx
+    - Render docLinks as clickable list with external link icons
+    - Open links in new tab with rel="noopener noreferrer"
+    - _Requirements: 18.2_
+  - [x] 23.2 Update canvas component info modal to show docLinks
+    - Add "Learn More" section to component info modal in InfrastructureCanvas.jsx
+    - Same styling as shop modal
+    - _Requirements: 18.2_
+  - [ ]* 23.3 Write property test for docLinks presence
+    - **Property 35: DocLinks Presence**
+    - **Validates: Requirements 18.1**
+
+- [x] 24. Implement Goal Prompt and Guided Recommendations
+  - [x] 24.1 Add goal state to AppContext
+    - Add GoalState interface: { goalText, adviceText, recommendedServiceTypes, timestamp }
+    - Add SET_GOAL_ADVICE action to reducer
+    - Add setGoalAdvice action creator
+    - _Requirements: 19.4_
+  - [x] 24.2 Create goal prompt UI in ComponentShop
+    - Add small text input field with placeholder "What do you want to build?"
+    - Add "Get Recommendations" button
+    - Display current goal advice text below input when available
+    - _Requirements: 19.1_
+  - [x] 24.3 Create goal advice agent call
+    - Create GOAL_PROMPT_TEMPLATE in agentPrompts.js
+    - Implement callGoalAdviceAgent(goalText, availableServices) in architectAgent.js
+    - Parse response to extract summary and recommendedServiceTypes (best effort)
+    - _Requirements: 19.2, 19.3, 19.5, 19.8_
+  - [x] 24.4 Highlight recommended services in shop
+    - Modify ComponentCard.jsx to accept isRecommended prop
+    - Display "Recommended" badge when component is in recommendedServiceTypes
+    - Style badge with subtle purple/green highlight
+    - _Requirements: 19.6_
+  - [x] 24.5 Update Architect Agent to reference current goal
+    - Modify buildArchitectInput to include currentGoal if set
+    - Update ARCHITECT_AGENT_SYSTEM_PROMPT to optionally reference goal
+    - _Requirements: 19.7_
+  - [ ]* 24.6 Write property test for goal recommendation highlighting
+    - **Property 33: Goal Recommendation Highlighting**
+    - **Validates: Requirements 19.6**
+
+- [x] 25. Implement Welcome-Back Message Cooldown
+  - [x] 25.1 Add welcome-back tracking to agent state
+    - Add lastWelcomeBackTimestamp to AppContext state
+    - Add welcomeBackShownThisSession flag (resets on page load)
+    - Add SET_WELCOME_BACK_SHOWN action
+    - _Requirements: 20.1_
+  - [x] 25.2 Implement cooldown logic in useFocusCoach hook
+    - Create shouldShowWelcomeBack(agentState) helper function
+    - Check: not shown this session AND 5+ minutes since last welcome-back
+    - Update checkReEngagement to respect cooldown
+    - Call markWelcomeBackShown after displaying message
+    - _Requirements: 20.2, 20.3, 20.4, 20.5_
+  - [ ]* 25.3 Write property test for welcome-back cooldown
+    - **Property 34: Welcome-Back Cooldown Enforcement**
+    - **Validates: Requirements 20.2, 20.3**
+
+- [ ] 26. Checkpoint - Extended Features
+  - Ensure all new features work correctly:
+  - Test: New services appear in shop with correct categories and costs
+  - Test: DocLinks display in component details modals
+  - Test: Invalid connections are blocked with helpful messages
+  - Test: Valid connections still work as before
+  - Test: Goal input produces recommendations and highlights services
+  - Test: Welcome-back message only shows once per session with 5-min cooldown
+  - Ask the user if questions arise.
+
+- [ ] 27. Regression Testing
+  - [ ] 27.1 Verify existing features still work
+    - Test timer start/pause/resume/complete flow
+    - Test credit calculation and display
+    - Test component purchase flow
+    - Test canvas drag-and-drop placement
+    - Test session history and statistics
+    - Test JSON export/import
+    - Test cloud auto-save
+    - _Requirements: All existing_
+  - [ ] 27.2 Build and deploy verification
+    - Run npm run build successfully
+    - Verify no console errors in production build
+    - Test on deployed Amplify environment
+    - _Requirements: 15.1, 15.2, 15.3_

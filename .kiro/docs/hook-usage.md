@@ -1,6 +1,6 @@
 # Agent Hook Usage During Development
 
-This document details how agent hooks automated quality checks and improved the development workflow for Kiro Focus.
+This document details how agent hooks automated quality checks and improved the development workflow for Nimbus.
 
 ## Hook Overview
 
@@ -160,7 +160,7 @@ export default function ComponentName() {
 ### Property Test Template Generated
 
 ```javascript
-// **Feature: kiro-focus, Property 9: Credits increase monotonically**
+// **Feature: nimbus, Property 9: Credits increase monotonically**
 // **Validates: Requirements 6.2**
 describe('Property 9: Credits increase monotonically', () => {
   it('longer sessions always yield more credits', () => {

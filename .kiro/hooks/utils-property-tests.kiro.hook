@@ -11,6 +11,6 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "A utility file was modified. Please:\n\n1. Read the modified utility file and identify all exported functions\n2. Check the src/__tests__/ directory for existing test files that cover these functions\n3. For each exported pure function that lacks property-based tests, suggest fast-check property tests following these conventions:\n   - Annotate tests with: `// **Feature: kiro-focus, Property {number}: {description}**`\n   - Use fast-check's `fc.assert` and `fc.property` patterns\n   - Focus on properties like: idempotency, commutativity, invariants, round-trip properties, and boundary conditions\n4. Provide complete test code examples that can be added to the test suite"
+    "prompt": "A utility file was modified. Please:\n\n1. Read the modified utility file and identify all exported functions\n2. Check the src/__tests__/ directory for existing test files that cover these functions\n3. For each exported pure function that lacks property-based tests, suggest fast-check property tests following these conventions:\n   - Annotate tests with: `// **Feature: nimbus, Property {number}: {description}**`\n   - Use fast-check's `fc.assert` and `fc.property` patterns\n   - Focus on properties like: idempotency, commutativity, invariants, round-trip properties, and boundary conditions\n4. Provide complete test code examples that can be added to the test suite"
   }
 }

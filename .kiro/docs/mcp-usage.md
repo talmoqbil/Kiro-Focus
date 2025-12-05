@@ -1,6 +1,6 @@
 # MCP Server Usage During Development
 
-This document details how Model Context Protocol (MCP) servers extended Kiro's capabilities during the development of Kiro Focus.
+This document details how Model Context Protocol (MCP) servers extended Kiro's capabilities during the development of Nimbus.
 
 ## MCP Configuration
 

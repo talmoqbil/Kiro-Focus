@@ -1,10 +1,37 @@
-# Kiro Focus
+# 🎃 Kiroween Hackathon - Nimbus
 
-A gamified focus timer that rewards users with "Cloud Credits" for completing timed focus sessions. Users spend credits to purchase AWS-style cloud infrastructure components and arrange them on a visual canvas, learning cloud architecture concepts through play.
+Nimbus is a gamified focus timer that rewards users with "Cloud Credits" for completing timed focus sessions. Users spend credits to purchase AWS-style cloud infrastructure components and arrange them on a visual canvas, learning cloud architecture concepts through play.
 
 ---
 
-## 🎃 Kiroween Hackathon - Kiro IDE Development Workflow
+## 📖 User Guide
+
+**New to Nimbus?** Check out the comprehensive [User Guide](.kiro/docs/user-guide.md) to learn:
+- How to use the focus timer effectively
+- How the credit system and bonuses work
+- How to purchase and place components
+- How to build real cloud architecture patterns
+- Tips for maximizing your productivity
+
+---
+
+## How to Use Nimbus
+
+### 1. Focus Sessions
+Select a duration (15-90 minutes) and click Start. Stay focused until the timer completes to earn Cloud Credits. The longer you focus and the more consistent your streak, the more credits you earn.
+
+### 2. Component Shop
+Spend your credits on AWS-style infrastructure components. Each purchase triggers the Cloud Architect to explain what you bought and suggest what to build next.
+
+### 3. Infrastructure Canvas
+Drag purchased components onto the visual grid. Use Connect Mode to wire them together. The canvas enforces realistic AWS architecture patterns and teaches you why certain connections work.
+
+### 4. Set a Goal
+Tell Nimbus what you want to build (e.g., "Netflix clone", "serverless API") and get personalized component recommendations with a "Recommended" badge in the shop.
+
+---
+
+## Kiro IDE Development Workflow
 
 This project was built for the **Kiroween Hackathon**, demonstrating advanced usage of Kiro IDE features for spec-driven development.
 
@@ -12,16 +39,17 @@ This project was built for the **Kiroween Hackathon**, demonstrating advanced us
 
 | Feature | Location | Purpose |
 |---------|----------|---------|
-| **Spec-Driven Development** | [.kiro/specs/kiro-focus/](.kiro/specs/kiro-focus/) | Requirements → Design → Tasks workflow |
+| **Spec-Driven Development** | [.kiro/specs/nimbus/](.kiro/specs/nimbus/) | Requirements → Design → Tasks workflow |
 | **Steering Documents** | [.kiro/steering/](.kiro/steering/) | Product, structure, and tech guidance |
 | **Agent Hooks** | [.kiro/hooks/](.kiro/hooks/) | Automated quality checks and compliance |
 | **MCP Integration** | [.kiro/settings/mcp.json](.kiro/settings/mcp.json) | AWS docs and web fetch capabilities |
 
-### 📚 Development Process Documentation
+### 📚 Documentation
 
 | Document | Description |
 |----------|-------------|
-| [Development Workflow](.kiro/docs/development-workflow.md) | Comprehensive overview of the entire development process |
+| [User Guide](.kiro/docs/user-guide.md) | Complete guide for using Nimbus |
+| [Development Workflow](.kiro/docs/development-workflow.md) | Overview of the spec-driven development process |
 | [MCP Usage](.kiro/docs/mcp-usage.md) | How MCP servers enhanced development |
 | [Hook Usage](.kiro/docs/hook-usage.md) | Agent hook implementation and impact |
 
@@ -38,18 +66,18 @@ This project was built for the **Kiroween Hackathon**, demonstrating advanced us
 
 ### Spec-Driven Development Highlights
 
-**Requirements Document** ([requirements.md](.kiro/specs/kiro-focus/requirements.md)):
+**Requirements Document** ([requirements.md](.kiro/specs/nimbus/requirements.md)):
 - 20 user stories with EARS-compliant acceptance criteria
 - Clear scope boundaries preventing feature creep
 - Testable criteria mapping to property-based tests
 
-**Design Document** ([design.md](.kiro/specs/kiro-focus/design.md)):
+**Design Document** ([design.md](.kiro/specs/nimbus/design.md)):
 - Architecture overview with component relationships
 - Data models for all application state
 - 35+ correctness properties for formal verification
 - Testing strategy with property-based testing approach
 
-**Tasks Document** ([tasks.md](.kiro/specs/kiro-focus/tasks.md)):
+**Tasks Document** ([tasks.md](.kiro/specs/nimbus/tasks.md)):
 - 27 granular, actionable implementation tasks
 - Full traceability to requirements
 - Systematic progress tracking
@@ -111,6 +139,8 @@ This project was built for the **Kiroween Hackathon**, demonstrating advanced us
 
 ---
 
+
+
 ## Getting Started
 
 ### Prerequisites
@@ -122,8 +152,8 @@ This project was built for the **Kiroween Hackathon**, demonstrating advanced us
 
 ```bash
 # Clone the repository
-git clone https://github.com/talmoqbil/Kiro-Focus.git
-cd Kiro-Focus/kiro-focus
+git clone https://github.com/talmoqbil/Nimbus.git
+cd Nimbus/nimbus
 
 # Install dependencies
 npm install
@@ -151,7 +181,7 @@ VITE_API_BASE_URL=https://your-api-gateway-url
 ## Project Structure
 
 ```
-kiro-focus/
+nimbus/
 ├── src/
 │   ├── App.jsx              # Root component
 │   ├── components/          # React components

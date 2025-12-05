@@ -6,8 +6,8 @@
   "when": {
     "type": "fileEdited",
     "patterns": [
-      "kiro-focus/src/components/*.jsx",
-      "kiro-focus/src/App.jsx"
+      "nimbus/src/components/*.jsx",
+      "nimbus/src/App.jsx"
     ]
   },
   "then": {

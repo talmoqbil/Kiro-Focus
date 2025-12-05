@@ -1,7 +1,7 @@
 # Project Structure
 
 ```
-kiro-focus/
+nimbus/
 ├── src/
 │   ├── App.jsx              # Root component with layout and navigation
 │   ├── main.jsx             # React entry point
