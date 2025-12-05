@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Staged Changes Code Review",
+  "description": "Reviews staged git changes for: 1) Missing error handlers in async code, 2) Stray console.log statements, 3) Hardcoded colors (should use kiro-* tokens), 4) Missing Requirements traceability comments. Lists issues and suggested fixes.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Run `git diff --cached` to get the staged changes. Analyze the diff output and check for the following issues:\n\n1. **Missing Error Handlers in Async Code**: Look for async functions, .then() chains, or Promise-based code that lacks try/catch blocks or .catch() handlers.\n\n2. **Stray console.log Statements**: Identify any console.log, console.warn, console.error, or console.debug statements that appear to be debugging leftovers.\n\n3. **Hardcoded Colors**: Find any hardcoded color values (hex codes like #fff, rgb(), hsl(), or color names) that should use kiro-* Tailwind tokens instead (e.g., bg-kiro-bg, text-kiro-purple).\n\n4. **Missing Requirements Traceability Comments**: Check if new functions or significant code blocks are missing requirement traceability comments in the format `// **Feature: kiro-focus, Property {number}: {description}**`.\n\nFor each issue found, provide:\n- The file and line number\n- The problematic code snippet\n- A suggested fix\n\nSummarize the total count of issues by category at the end."
+  }
+}

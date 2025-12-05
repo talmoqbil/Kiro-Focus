@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "React Component Pattern Checker",
+  "description": "Verifies saved React components follow project patterns: functional components with hooks, JSDoc with Requirements refs, Tailwind kiro-* theme tokens, useApp() for global state, and lucide-react icons.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "kiro-focus/src/components/*.jsx",
+      "kiro-focus/src/App.jsx"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A React component file was just saved. Review the file and verify it follows these project patterns:\n\n1. **Functional Components with Hooks**: Must use functional component syntax (arrow functions or function declarations), not class components. Should use React hooks appropriately.\n\n2. **JSDoc with Requirements refs**: Component should have JSDoc comments that reference requirements where applicable.\n\n3. **Tailwind kiro-* Theme Tokens**: Styling should use Tailwind utility classes, preferring the custom `kiro-*` theme tokens (e.g., `bg-kiro-bg`, `text-kiro-purple`, `border-kiro-border`) over generic Tailwind colors.\n\n4. **useApp() for Global State**: If the component needs global state access, it should use the `useApp()` hook from AppContext, not prop drilling or other state management.\n\n5. **lucide-react Icons**: Any icons used should come from the `lucide-react` library, not other icon libraries.\n\nFlag any deviations from these patterns with specific line references and suggestions for how to fix them. If the component follows all patterns correctly, confirm compliance."
+  }
+}

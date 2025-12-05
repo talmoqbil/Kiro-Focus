@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Requirements Traceability Validator",
+  "description": "Finds all '**Validates: Requirements X.X**' comments in recently edited files, loads the requirements from .kiro/specs/kiro-focus/requirements.md, and verifies the code actually implements each claimed requirement. Reports any gaps or mismatches between claimed and actual implementation.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "kiro-focus/src/**/*.js",
+      "kiro-focus/src/**/*.jsx",
+      "backend/**/*.js"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A file with a requirements traceability comment was edited. Please:\n\n1. Search the edited file for any '**Validates: Requirements X.X**' comments (or similar patterns like 'Validates: Requirement X.X', 'Validates Requirements X.X')\n2. If found, load the requirements document from .kiro/specs/kiro-focus/requirements.md\n3. For each claimed requirement reference:\n   - Find the corresponding requirement in the requirements.md file\n   - Analyze the surrounding code to verify it actually implements what the requirement specifies\n   - Check if the implementation is complete or partial\n4. Report your findings:\n   - List each claimed requirement and whether the code properly validates it\n   - Identify any gaps where the code doesn't fully implement the claimed requirement\n   - Note any requirements that are referenced but don't exist in requirements.md\n   - Suggest improvements if the implementation is incomplete\n\nIf no '**Validates: Requirements**' comments are found in the file, simply note that no traceability comments were detected."
+  }
+}
