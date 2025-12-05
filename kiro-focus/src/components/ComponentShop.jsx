@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { 
   Server, Database, HardDrive, GitBranch, Globe, Zap, Lock, ExternalLink,
-  MessageSquare, Bell, Workflow, Users, Shield, Activity
+  MessageSquare, Bell, Workflow, Users, Shield, Activity, Sparkles, Loader2
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { COMPONENTS_CATALOG, getComponentById } from '../data/components';
@@ -11,6 +11,7 @@ import Modal from './Modal';
 import { useArchitect } from '../hooks/useAgents';
 import { useCloudState } from '../App';
 import { CATEGORY_DISPLAY_NAMES } from '../utils/connectionRules';
+import { callGoalAdviceAgent } from '../agents/architectAgent';
 
 /**
  * ComponentShop Component
@@ -42,17 +43,64 @@ const ICON_MAP = {
 
 export default function ComponentShop() {
   const { state, actions } = useApp();
-  const { userProgress } = state;
+  const { userProgress, goalState } = state;
   const { credits, ownedComponents } = userProgress;
   
   const [selectedComponent, setSelectedComponent] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  
+  // Goal input state
+  const [goalInput, setGoalInput] = useState('');
+  const [isLoadingGoal, setIsLoadingGoal] = useState(false);
   
   // Architect agent for purchase explanations
   const { onPurchase: notifyArchitect } = useArchitect();
   
   // Cloud state for auto-save
   const { triggerCloudSave } = useCloudState();
+
+  // Handle goal submission
+  // **Validates: Requirements 19.1, 19.2, 19.3**
+  const handleGoalSubmit = async () => {
+    if (!goalInput.trim() || isLoadingGoal) return;
+    
+    setIsLoadingGoal(true);
+    
+    try {
+      // Build available services list
+      const availableServices = COMPONENTS_CATALOG.map(c => ({
+        id: c.id,
+        name: c.name,
+        description: c.description
+      }));
+      
+      const result = await callGoalAdviceAgent(goalInput.trim(), availableServices);
+      
+      // Store the goal advice in state
+      actions.setGoalAdvice(
+        goalInput.trim(),
+        result.summary,
+        result.recommendedServiceTypes
+      );
+      
+      // Show Kiro message with the advice
+      actions.setKiroEmotion('teaching');
+      actions.setKiroMessage({
+        text: result.summary,
+        timestamp: Date.now(),
+        duration: 8000
+      });
+    } catch (error) {
+      console.error('Goal advice error:', error);
+      actions.setKiroMessage({
+        text: "I had trouble analyzing your goal. Try describing it differently!",
+        timestamp: Date.now(),
+        duration: 5000
+      });
+    } finally {
+      setIsLoadingGoal(false);
+    }
+  };
 
   // Handle purchase
   const handlePurchase = (component) => {
@@ -115,6 +163,63 @@ export default function ComponentShop() {
         </div>
       </div>
 
+      {/* Goal Prompt UI */}
+      {/* **Validates: Requirements 19.1** */}
+      <div className="mb-6 p-4 bg-kiro-bg-light rounded-xl border border-kiro-purple/20">
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles size={18} className="text-kiro-purple" />
+          <span className="text-sm font-semibold text-white">What do you want to build?</span>
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={goalInput}
+            onChange={(e) => setGoalInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleGoalSubmit()}
+            placeholder="e.g., static website, serverless API, web app..."
+            className="flex-1 px-3 py-2 bg-kiro-bg border border-kiro-purple/30 rounded-lg 
+                     text-white text-sm placeholder-gray-500 focus:outline-none 
+                     focus:border-kiro-purple transition-colors"
+          />
+          <button
+            onClick={handleGoalSubmit}
+            disabled={!goalInput.trim() || isLoadingGoal}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+              goalInput.trim() && !isLoadingGoal
+                ? 'bg-kiro-purple text-white hover:bg-kiro-purple/80'
+                : 'bg-gray-600/30 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            {isLoadingGoal ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                Thinking...
+              </>
+            ) : (
+              <>
+                <Sparkles size={14} />
+                Get Recommendations
+              </>
+            )}
+          </button>
+        </div>
+        
+        {/* Current goal advice display */}
+        {goalState.adviceText && (
+          <div className="mt-3 p-3 bg-kiro-purple/10 border border-kiro-purple/20 rounded-lg">
+            <div className="flex items-start gap-2">
+              <Sparkles size={14} className="text-kiro-purple mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm text-gray-300">{goalState.adviceText}</p>
+                {goalState.goalText && (
+                  <p className="text-xs text-gray-500 mt-1">Goal: "{goalState.goalText}"</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Component Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {COMPONENTS_CATALOG.map(component => (
@@ -125,6 +230,7 @@ export default function ComponentShop() {
             ownedComponents={ownedComponents}
             onPurchase={handlePurchase}
             onMoreInfo={handleMoreInfo}
+            isRecommended={goalState.recommendedServiceTypes?.includes(component.id)}
           />
         ))}
       </div>

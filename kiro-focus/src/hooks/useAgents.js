@@ -10,7 +10,7 @@
 import { useCallback, useRef } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import { getFocusCoachFeedback } from '../agents/focusCoachAgent.js';
-import { getArchitectPurchaseFeedback, getArchitectAnalysis, checkArchitecturePattern } from '../agents/architectAgent.js';
+import { getArchitectPurchaseFeedback, getArchitectAnalysis, checkArchitecturePattern, getPlacementFeedback } from '../agents/architectAgent.js';
 import { canMakeApiCall } from '../agents/agentApiClient.js';
 import { EVENTS } from '../utils/kiroLogic.js';
 
@@ -33,6 +33,36 @@ function calculateDaysSinceLastSession(lastSessionDate) {
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   
   return diffDays;
+}
+
+/**
+ * Welcome-back cooldown duration in milliseconds (5 minutes)
+ * **Validates: Requirements 20.2**
+ */
+const WELCOME_BACK_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Check if welcome-back message should be shown based on cooldown rules
+ * **Validates: Requirements 20.2, 20.3**
+ * 
+ * @param {Object} agentState - Agent state from context
+ * @returns {boolean} - True if welcome-back can be shown
+ */
+function shouldShowWelcomeBack(agentState) {
+  // Rule 1: Not shown this session
+  if (agentState.welcomeBackShownThisSession) {
+    return false;
+  }
+  
+  // Rule 2: At least 5 minutes since last welcome-back
+  if (agentState.lastWelcomeBackTimestamp) {
+    const timeSinceLastWelcome = Date.now() - agentState.lastWelcomeBackTimestamp;
+    if (timeSinceLastWelcome < WELCOME_BACK_COOLDOWN_MS) {
+      return false;
+    }
+  }
+  
+  return true;
 }
 
 /**
@@ -77,7 +107,8 @@ export function useFocusCoach() {
     isProcessingRef.current = true;
     
     try {
-      const { userProgress } = state;
+      const { userProgress, goalState } = state;
+      const currentGoal = goalState?.goalText || null;
       
       const sessionData = {
         duration,
@@ -87,7 +118,7 @@ export function useFocusCoach() {
         completionRate: calculateCompletionRate(userProgress.sessionHistory)
       };
       
-      const response = await getFocusCoachFeedback('encouragement', sessionData);
+      const response = await getFocusCoachFeedback('encouragement', sessionData, currentGoal);
       sendKiroMessage(response.message, EVENTS.SESSION_START);
     } finally {
       isProcessingRef.current = false;
@@ -103,7 +134,8 @@ export function useFocusCoach() {
     isProcessingRef.current = true;
     
     try {
-      const { userProgress } = state;
+      const { userProgress, goalState } = state;
+      const currentGoal = goalState?.goalText || null;
       
       const sessionData = {
         duration: session.duration,
@@ -114,7 +146,7 @@ export function useFocusCoach() {
         completionRate: calculateCompletionRate(userProgress.sessionHistory)
       };
       
-      const response = await getFocusCoachFeedback('analysis', sessionData);
+      const response = await getFocusCoachFeedback('analysis', sessionData, currentGoal);
       sendKiroMessage(response.message, EVENTS.SESSION_COMPLETE);
     } finally {
       isProcessingRef.current = false;
@@ -130,7 +162,8 @@ export function useFocusCoach() {
     isProcessingRef.current = true;
     
     try {
-      const { userProgress } = state;
+      const { userProgress, goalState } = state;
+      const currentGoal = goalState?.goalText || null;
       
       const sessionData = {
         duration: session.duration,
@@ -141,7 +174,7 @@ export function useFocusCoach() {
         completionRate: calculateCompletionRate(userProgress.sessionHistory)
       };
       
-      const response = await getFocusCoachFeedback('supportive', sessionData);
+      const response = await getFocusCoachFeedback('supportive', sessionData, currentGoal);
       sendKiroMessage(response.message, EVENTS.SESSION_ABANDON);
     } finally {
       isProcessingRef.current = false;
@@ -150,22 +183,30 @@ export function useFocusCoach() {
   
   /**
    * Check for re-engagement and provide welcome message
-   * Requirements: 7.4
+   * Requirements: 7.4, 20.2, 20.3, 20.4, 20.5
    * 
    * @returns {boolean} - True if re-engagement message was sent
    */
   const checkReEngagement = useCallback(async () => {
     if (isProcessingRef.current) return false;
     
-    const { userProgress } = state;
+    const { userProgress, agentState } = state;
     const daysSinceLastSession = calculateDaysSinceLastSession(userProgress.lastSessionDate);
     
     // Only trigger re-engagement if >= 1 day since last session
     if (daysSinceLastSession < 1) return false;
     
+    // Check welcome-back cooldown (Requirements 20.2, 20.3)
+    if (!shouldShowWelcomeBack(agentState)) {
+      return false;
+    }
+    
     isProcessingRef.current = true;
     
     try {
+      const { goalState } = state;
+      const currentGoal = goalState?.goalText || null;
+      
       const sessionData = {
         daysSinceLastSession,
         recentSessions: userProgress.sessionHistory.slice(-5),
@@ -174,13 +215,17 @@ export function useFocusCoach() {
         completionRate: calculateCompletionRate(userProgress.sessionHistory)
       };
       
-      const response = await getFocusCoachFeedback('motivation', sessionData);
+      const response = await getFocusCoachFeedback('motivation', sessionData, currentGoal);
       sendKiroMessage(response.message, EVENTS.IDLE);
+      
+      // Mark welcome-back as shown (Requirements 20.4)
+      actions.markWelcomeBackShown();
+      
       return true;
     } finally {
       isProcessingRef.current = false;
     }
-  }, [state, sendKiroMessage]);
+  }, [state, sendKiroMessage, actions]);
   
   return {
     onSessionStart,
@@ -222,7 +267,8 @@ export function useArchitect() {
     isProcessingRef.current = true;
     
     try {
-      const { userProgress } = state;
+      const { userProgress, goalState } = state;
+      const currentGoal = goalState?.goalText || null;
       
       // Build component list from owned components
       const allComponents = userProgress.ownedComponents.map(id => ({
@@ -233,7 +279,8 @@ export function useArchitect() {
       const response = await getArchitectPurchaseFeedback(
         componentType,
         allComponents,
-        userProgress.credits
+        userProgress.credits,
+        currentGoal
       );
       
       // Check for architecture pattern
@@ -266,10 +313,14 @@ export function useArchitect() {
     isProcessingRef.current = true;
     
     try {
-      const { userProgress } = state;
+      const { userProgress, goalState } = state;
+      const currentGoal = goalState?.goalText || null;
       
       if (userProgress.ownedComponents.length === 0) {
-        sendKiroMessage("You haven't purchased any components yet! Complete some focus sessions to earn credits and start building your cloud infrastructure.");
+        const goalMessage = currentGoal 
+          ? `You haven't purchased any components yet! Complete some focus sessions to earn credits and start building your ${currentGoal}.`
+          : "You haven't purchased any components yet! Complete some focus sessions to earn credits and start building your cloud infrastructure.";
+        sendKiroMessage(goalMessage);
         return null;
       }
       
@@ -280,7 +331,8 @@ export function useArchitect() {
       
       const response = await getArchitectAnalysis(
         allComponents,
-        userProgress.credits
+        userProgress.credits,
+        currentGoal
       );
       
       sendKiroMessage(response.explanation);
@@ -299,8 +351,34 @@ export function useArchitect() {
     return checkArchitecturePattern(userProgress.ownedComponents);
   }, [state]);
   
+  /**
+   * Handle component placement on canvas - provide contextual guidance
+   * @param {string} componentType - The placed component type
+   */
+  const onPlacement = useCallback(async (componentType) => {
+    if (isProcessingRef.current) return;
+    isProcessingRef.current = true;
+    
+    try {
+      const { architecture, goalState } = state;
+      const currentGoal = goalState?.goalText || null;
+      
+      const response = await getPlacementFeedback(
+        componentType,
+        architecture.placedComponents,
+        architecture.connections,
+        currentGoal
+      );
+      
+      sendKiroMessage(response.message);
+    } finally {
+      isProcessingRef.current = false;
+    }
+  }, [state, sendKiroMessage]);
+  
   return {
     onPurchase,
+    onPlacement,
     analyzeArchitecture,
     getPattern,
     canCallAgent: canMakeApiCall

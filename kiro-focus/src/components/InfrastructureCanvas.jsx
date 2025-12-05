@@ -69,8 +69,8 @@ export default function InfrastructureCanvas() {
   const [connectMode, setConnectMode] = useState(false);
   const [connectFrom, setConnectFrom] = useState(null); // First component selected for connection
   
-  // Architect agent for upgrade explanations
-  const { onPurchase: notifyArchitect } = useArchitect();
+  // Architect agent for upgrade explanations and placement feedback
+  const { onPurchase: notifyArchitect, onPlacement: notifyPlacement } = useArchitect();
   
   // Cloud state for auto-save
   const { triggerCloudSave } = useCloudState();
@@ -152,6 +152,9 @@ export default function InfrastructureCanvas() {
       
       actions.placeComponent(newComponent);
       
+      // Notify architect agent about placement for contextual guidance
+      notifyPlacement(draggedComponent.type);
+      
       // Auto-save to cloud after component placement (Requirements 13.8)
       setTimeout(() => {
         triggerCloudSave();
@@ -193,6 +196,9 @@ export default function InfrastructureCanvas() {
         tier: 1
       };
       actions.placeComponent(newComponent);
+      
+      // Notify architect agent about placement for contextual guidance
+      notifyPlacement(component.type);
       
       // Auto-save to cloud after component placement (Requirements 13.8)
       setTimeout(() => {
@@ -314,16 +320,18 @@ export default function InfrastructureCanvas() {
       
       // Validate connection using category-based rules
       if (!isValidConnection(fromComponentData, toComponentData)) {
-        // Invalid connection - show error via Kiro
+        // Invalid connection - show detailed explanation via Kiro
         const hint = getConnectionHint(
           fromComponentData?.category, 
-          toComponentData?.category
+          toComponentData?.category,
+          fromComponentData?.name || connectFrom.type,
+          toComponentData?.name || placed.type
         );
         actions.setKiroEmotion('teaching');
         actions.setKiroMessage({
           text: hint,
           timestamp: Date.now(),
-          duration: 6000
+          duration: 8000 // Longer duration for educational content
         });
         setConnectFrom(null);
         return;
@@ -336,13 +344,18 @@ export default function InfrastructureCanvas() {
         type: 'network'
       });
       
-      // Show success message via Kiro
+      // Show success message via Kiro with timed celebration
       actions.setKiroEmotion('celebrating');
       actions.setKiroMessage({
         text: `Great connection! ${fromComponentData?.name || connectFrom.type} → ${toComponentData?.name || placed.type}`,
         timestamp: Date.now(),
         duration: 3000
       });
+      
+      // Reset emotion to idle after 3 seconds (celebration duration)
+      setTimeout(() => {
+        actions.setKiroEmotion('idle');
+      }, 3000);
       
       // Reset connection state
       setConnectFrom(null);

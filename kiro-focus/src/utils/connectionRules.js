@@ -153,26 +153,57 @@ export function isValidConnection(fromComponent, toComponent) {
  * Get a helpful hint message for why a connection is invalid
  * @param {string} fromCategory - Source component category
  * @param {string} toCategory - Target component category
+ * @param {string} fromName - Source component name (optional)
+ * @param {string} toName - Target component name (optional)
  * @returns {string} - Human-readable explanation
  */
-export function getConnectionHint(fromCategory, toCategory) {
-  const fromName = CATEGORY_DISPLAY_NAMES[fromCategory] || fromCategory;
-  const toName = CATEGORY_DISPLAY_NAMES[toCategory] || toCategory;
+export function getConnectionHint(fromCategory, toCategory, fromName = null, toName = null) {
+  const fromCatName = CATEGORY_DISPLAY_NAMES[fromCategory] || fromCategory;
+  const toCatName = CATEGORY_DISPLAY_NAMES[toCategory] || toCategory;
+  const sourceName = fromName || fromCatName;
+  const targetName = toName || toCatName;
   
   // Special case: observability cannot be a source
   if (fromCategory === COMPONENT_CATEGORIES.OBSERVABILITY) {
-    return `${fromName} components receive data from other services but don't initiate connections. Try connecting from the other component instead.`;
+    return `${sourceName} receives metrics from other services - it doesn't initiate connections. Try connecting TO it from ${targetName} instead!`;
+  }
+  
+  // Special case: same category connections (usually invalid)
+  if (fromCategory === toCategory && fromCategory !== COMPONENT_CATEGORIES.EDGE) {
+    return `${sourceName} and ${targetName} are both ${fromCatName} services. In real architectures, you'd typically connect different service types together.`;
+  }
+  
+  // Specific architectural guidance based on categories
+  const specificHints = {
+    [`${COMPONENT_CATEGORIES.DATABASE}-${COMPONENT_CATEGORIES.COMPUTE}`]: 
+      `Databases don't call compute services - it's the other way around! Connect your ${targetName} TO ${sourceName} instead.`,
+    [`${COMPONENT_CATEGORIES.DATABASE}-${COMPONENT_CATEGORIES.SERVERLESS}`]: 
+      `Databases store data, they don't call functions. Connect your ${targetName} TO ${sourceName} to read/write data.`,
+    [`${COMPONENT_CATEGORIES.STORAGE}-${COMPONENT_CATEGORIES.COMPUTE}`]: 
+      `Storage services don't call compute directly. Connect ${targetName} TO ${sourceName}, or use events via SQS/SNS.`,
+    [`${COMPONENT_CATEGORIES.CACHE}-${COMPONENT_CATEGORIES.DATABASE}`]: 
+      `Cache sits in front of databases, not behind them. Your compute should connect to cache, which then connects to the database.`,
+    [`${COMPONENT_CATEGORIES.COMPUTE}-${COMPONENT_CATEGORIES.EDGE}`]: 
+      `Traffic flows from edge TO compute, not the other way. ${sourceName} should receive requests from ${targetName}.`,
+    [`${COMPONENT_CATEGORIES.SERVERLESS}-${COMPONENT_CATEGORIES.EDGE}`]: 
+      `Traffic flows from edge TO serverless functions. ${targetName} should connect TO ${sourceName}.`,
+  };
+  
+  const key = `${fromCategory}-${toCategory}`;
+  if (specificHints[key]) {
+    return specificHints[key];
   }
   
   const allowedTargets = CONNECTION_RULES[fromCategory];
   if (!allowedTargets || allowedTargets.length === 0) {
-    return `${fromName} components cannot connect to other services.`;
+    return `${sourceName} doesn't typically initiate connections to other services.`;
   }
   
   const allowedNames = allowedTargets
     .filter(cat => cat !== COMPONENT_CATEGORIES.OBSERVABILITY)
+    .slice(0, 3) // Limit to 3 suggestions
     .map(cat => CATEGORY_DISPLAY_NAMES[cat])
     .join(', ');
   
-  return `${fromName} components can connect to: ${allowedNames}. ${toName} is not a valid target.`;
+  return `${sourceName} typically connects to ${allowedNames} services. Try connecting it to one of those instead!`;
 }

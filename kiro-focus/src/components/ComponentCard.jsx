@@ -1,6 +1,6 @@
 import { 
   Server, Database, HardDrive, GitBranch, Globe, Lock, Check, Zap,
-  MessageSquare, Bell, Workflow, Users, Shield, Activity
+  MessageSquare, Bell, Workflow, Users, Shield, Activity, Sparkles
 } from 'lucide-react';
 import { getPurchaseState, isComponentOwned } from '../utils/shopLogic';
 import { CATEGORY_DISPLAY_NAMES } from '../utils/connectionRules';
@@ -11,7 +11,7 @@ import { CATEGORY_DISPLAY_NAMES } from '../utils/connectionRules';
  * Displays a single infrastructure component in the shop.
  * Shows AWS icon, name, description, cost, and purchase state.
  * 
- * **Validates: Requirements 4.1, 4.2, 4.3, 4.4, 16.1**
+ * **Validates: Requirements 4.1, 4.2, 4.3, 4.4, 16.1, 19.6**
  */
 
 // Fallback icon mapping for component types (if AWS icon fails)
@@ -57,7 +57,8 @@ export default function ComponentCard({
   credits, 
   ownedComponents,
   onPurchase,
-  onMoreInfo
+  onMoreInfo,
+  isRecommended = false
 }) {
   const purchaseState = getPurchaseState(component, credits, ownedComponents);
   const isOwned = isComponentOwned(component.id, ownedComponents);
@@ -93,14 +94,29 @@ export default function ComponentCard({
 
   const styles = stateStyles[purchaseState];
 
+  // Add highlight for recommended components
+  const recommendedStyles = isRecommended && purchaseState !== 'owned' 
+    ? 'ring-2 ring-kiro-purple/50 border-kiro-purple' 
+    : '';
+
   return (
     <div 
-      className={`relative rounded-xl border p-4 transition-all duration-200 ${styles.border} ${styles.bg}`}
+      className={`relative rounded-xl border p-4 transition-all duration-200 ${styles.border} ${styles.bg} ${recommendedStyles}`}
     >
       {/* Owned badge */}
       {purchaseState === 'owned' && (
         <div className="absolute -top-2 -right-2 bg-kiro-success rounded-full p-1">
           <Check size={14} className="text-white" />
+        </div>
+      )}
+
+      {/* Recommended badge */}
+      {/* **Validates: Requirements 19.6** */}
+      {isRecommended && purchaseState !== 'owned' && (
+        <div className="absolute -top-2 -left-2 bg-kiro-purple rounded-full px-2 py-0.5 
+                      flex items-center gap-1 shadow-lg">
+          <Sparkles size={10} className="text-white" />
+          <span className="text-xs font-medium text-white">Recommended</span>
         </div>
       )}
 

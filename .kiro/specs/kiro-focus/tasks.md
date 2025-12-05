@@ -410,28 +410,28 @@
     - **Property 35: DocLinks Presence**
     - **Validates: Requirements 18.1**
 
-- [ ] 24. Implement Goal Prompt and Guided Recommendations
-  - [ ] 24.1 Add goal state to AppContext
+- [x] 24. Implement Goal Prompt and Guided Recommendations
+  - [x] 24.1 Add goal state to AppContext
     - Add GoalState interface: { goalText, adviceText, recommendedServiceTypes, timestamp }
     - Add SET_GOAL_ADVICE action to reducer
     - Add setGoalAdvice action creator
     - _Requirements: 19.4_
-  - [ ] 24.2 Create goal prompt UI in ComponentShop
+  - [x] 24.2 Create goal prompt UI in ComponentShop
     - Add small text input field with placeholder "What do you want to build?"
     - Add "Get Recommendations" button
     - Display current goal advice text below input when available
     - _Requirements: 19.1_
-  - [ ] 24.3 Create goal advice agent call
+  - [x] 24.3 Create goal advice agent call
     - Create GOAL_PROMPT_TEMPLATE in agentPrompts.js
     - Implement callGoalAdviceAgent(goalText, availableServices) in architectAgent.js
     - Parse response to extract summary and recommendedServiceTypes (best effort)
     - _Requirements: 19.2, 19.3, 19.5, 19.8_
-  - [ ] 24.4 Highlight recommended services in shop
+  - [x] 24.4 Highlight recommended services in shop
     - Modify ComponentCard.jsx to accept isRecommended prop
     - Display "Recommended" badge when component is in recommendedServiceTypes
     - Style badge with subtle purple/green highlight
     - _Requirements: 19.6_
-  - [ ] 24.5 Update Architect Agent to reference current goal
+  - [x] 24.5 Update Architect Agent to reference current goal
     - Modify buildArchitectInput to include currentGoal if set
     - Update ARCHITECT_AGENT_SYSTEM_PROMPT to optionally reference goal
     - _Requirements: 19.7_
@@ -439,13 +439,13 @@
     - **Property 33: Goal Recommendation Highlighting**
     - **Validates: Requirements 19.6**
 
-- [ ] 25. Implement Welcome-Back Message Cooldown
-  - [ ] 25.1 Add welcome-back tracking to agent state
+- [x] 25. Implement Welcome-Back Message Cooldown
+  - [x] 25.1 Add welcome-back tracking to agent state
     - Add lastWelcomeBackTimestamp to AppContext state
     - Add welcomeBackShownThisSession flag (resets on page load)
     - Add SET_WELCOME_BACK_SHOWN action
     - _Requirements: 20.1_
-  - [ ] 25.2 Implement cooldown logic in useFocusCoach hook
+  - [x] 25.2 Implement cooldown logic in useFocusCoach hook
     - Create shouldShowWelcomeBack(agentState) helper function
     - Check: not shown this session AND 5+ minutes since last welcome-back
     - Update checkReEngagement to respect cooldown

@@ -39,6 +39,22 @@ const initialState = {
     showModal: null, // modal id or null
     messageQueue: [], // KiroMessage[]
   },
+  
+  // Agent State - Welcome-back message cooldown tracking
+  // **Validates: Requirements 20.1**
+  agentState: {
+    lastWelcomeBackTimestamp: null, // Unix timestamp of last welcome-back message
+    welcomeBackShownThisSession: false, // Resets on page load
+  },
+  
+  // Goal State - User's architecture goal and recommendations
+  // **Validates: Requirements 19.4**
+  goalState: {
+    goalText: null, // User's goal description (e.g., "static website", "serverless API")
+    adviceText: null, // AI-generated advice summary
+    recommendedServiceTypes: [], // Array of component IDs to highlight
+    timestamp: null, // When the goal was set
+  },
 };
 
 // Action types
@@ -72,6 +88,13 @@ const ActionTypes = {
   ENQUEUE_MESSAGE: 'ENQUEUE_MESSAGE',
   DEQUEUE_MESSAGE: 'DEQUEUE_MESSAGE',
   SET_MODAL: 'SET_MODAL',
+  
+  // Agent State
+  SET_WELCOME_BACK_SHOWN: 'SET_WELCOME_BACK_SHOWN',
+  
+  // Goal State
+  SET_GOAL_ADVICE: 'SET_GOAL_ADVICE',
+  CLEAR_GOAL: 'CLEAR_GOAL',
   
   // Import/Export
   IMPORT_STATE: 'IMPORT_STATE',
@@ -286,6 +309,37 @@ function appReducer(state, action) {
         uiState: { ...state.uiState, showModal: action.payload },
       };
     
+    // Agent State actions
+    // **Validates: Requirements 20.1**
+    case ActionTypes.SET_WELCOME_BACK_SHOWN:
+      return {
+        ...state,
+        agentState: {
+          ...state.agentState,
+          lastWelcomeBackTimestamp: Date.now(),
+          welcomeBackShownThisSession: true,
+        },
+      };
+    
+    // Goal State actions
+    // **Validates: Requirements 19.4**
+    case ActionTypes.SET_GOAL_ADVICE:
+      return {
+        ...state,
+        goalState: {
+          goalText: action.payload.goalText,
+          adviceText: action.payload.adviceText,
+          recommendedServiceTypes: action.payload.recommendedServiceTypes || [],
+          timestamp: Date.now(),
+        },
+      };
+    
+    case ActionTypes.CLEAR_GOAL:
+      return {
+        ...state,
+        goalState: initialState.goalState,
+      };
+    
     // Import state
     case ActionTypes.IMPORT_STATE:
       return {
@@ -363,6 +417,16 @@ export function AppProvider({ children }) {
       dispatch({ type: ActionTypes.DEQUEUE_MESSAGE }), []),
     setModal: useCallback((modalId) => 
       dispatch({ type: ActionTypes.SET_MODAL, payload: modalId }), []),
+    
+    // Agent State
+    markWelcomeBackShown: useCallback(() => 
+      dispatch({ type: ActionTypes.SET_WELCOME_BACK_SHOWN }), []),
+    
+    // Goal State
+    setGoalAdvice: useCallback((goalText, adviceText, recommendedServiceTypes) => 
+      dispatch({ type: ActionTypes.SET_GOAL_ADVICE, payload: { goalText, adviceText, recommendedServiceTypes } }), []),
+    clearGoal: useCallback(() => 
+      dispatch({ type: ActionTypes.CLEAR_GOAL }), []),
     
     // Import
     importState: useCallback((data) => 

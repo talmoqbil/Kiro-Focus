@@ -30,9 +30,10 @@ function getTimeOfDay() {
  * 
  * @param {string} mode - 'encouragement' | 'analysis' | 'motivation' | 'supportive'
  * @param {Object} sessionData - User session data
+ * @param {string|null} currentGoal - User's current architecture goal (optional)
  * @returns {Object} - Formatted input for the agent
  */
-export function buildFocusCoachInput(mode, sessionData) {
+export function buildFocusCoachInput(mode, sessionData, currentGoal = null) {
   const {
     duration = 0,
     completed = false,
@@ -54,7 +55,8 @@ export function buildFocusCoachInput(mode, sessionData) {
       completionRate: Math.round(completionRate * 100) / 100,
       timeOfDay: getTimeOfDay(),
       daysSinceLastSession
-    }
+    },
+    currentGoal
   };
 }
 
@@ -64,9 +66,16 @@ export function buildFocusCoachInput(mode, sessionData) {
  * @returns {string} - Formatted prompt string
  */
 function formatUserPrompt(input) {
-  const { mode, sessionData } = input;
+  const { mode, sessionData, currentGoal } = input;
   
   let prompt = `Mode: ${mode.toUpperCase()}\n\n`;
+  
+  // CRITICAL: Include goal at the top if set
+  if (currentGoal) {
+    prompt += `🎯 USER IS BUILDING: "${currentGoal}"\n`;
+    prompt += `IMPORTANT: Reference this goal in your message!\n\n`;
+  }
+  
   prompt += `User Context:\n`;
   prompt += `- Time of day: ${sessionData.timeOfDay}\n`;
   prompt += `- Current streak: ${sessionData.streak} days\n`;
@@ -75,20 +84,32 @@ function formatUserPrompt(input) {
   
   if (mode === 'encouragement') {
     prompt += `- Starting session duration: ${Math.round(sessionData.duration / 60)} minutes\n`;
+    if (currentGoal) {
+      prompt += `\nEncourage them to focus on building their ${currentGoal}!\n`;
+    }
   }
   
   if (mode === 'analysis') {
     prompt += `- Just completed: ${sessionData.completed ? 'Yes' : 'No'}\n`;
     prompt += `- Session duration: ${Math.round(sessionData.duration / 60)} minutes\n`;
+    if (currentGoal) {
+      prompt += `\nCelebrate their progress toward building their ${currentGoal}!\n`;
+    }
   }
   
   if (mode === 'motivation') {
     prompt += `- Days since last session: ${sessionData.daysSinceLastSession}\n`;
+    if (currentGoal) {
+      prompt += `\nWelcome them back and remind them about their ${currentGoal} project!\n`;
+    }
   }
   
   if (mode === 'supportive') {
     prompt += `- Session was abandoned early\n`;
     prompt += `- Attempted duration: ${Math.round(sessionData.duration / 60)} minutes\n`;
+    if (currentGoal) {
+      prompt += `\nEncourage them - building a ${currentGoal} takes time!\n`;
+    }
   }
   
   if (sessionData.recentSessions.length > 0) {
@@ -146,10 +167,11 @@ export function parseFocusCoachResponse(response, mode) {
  * 
  * @param {string} mode - 'encouragement' | 'analysis' | 'motivation' | 'supportive'
  * @param {Object} sessionData - User session data
+ * @param {string|null} currentGoal - User's current architecture goal (optional)
  * @returns {Promise<Object>} - Parsed agent response
  */
-export async function getFocusCoachFeedback(mode, sessionData) {
-  const input = buildFocusCoachInput(mode, sessionData);
+export async function getFocusCoachFeedback(mode, sessionData, currentGoal = null) {
+  const input = buildFocusCoachInput(mode, sessionData, currentGoal);
   const response = await callFocusCoachAgent(input);
   return parseFocusCoachResponse(response, mode);
 }
